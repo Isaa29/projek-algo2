@@ -4,7 +4,6 @@ import os
 file_pengguna = "akun_pengguna.csv"
 file_admin = "akun_admin.csv"
 
-# Inisialisasi file jika belum ada
 def inisialisasi_file():
     if not os.path.exists(file_pengguna):
         with open(file_pengguna, mode='w', newline='') as file:
@@ -15,12 +14,11 @@ def inisialisasi_file():
         with open(file_admin, mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['username', 'password'])
-            writer.writerow(['admin1', 'adminpass'])  # akun default
+            writer.writerow(['admin1', 'adminpass']) 
 
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-# Main menu
 def main():
     clear_terminal()
     print("""
@@ -46,10 +44,9 @@ def main():
     elif pilihan == '3':
         keluar()
     else:
-        print('❌ Pilihan tidak valid!\n')
-        return main()  # rekursif
+        print('Pilihan tidak valid!\n')
+        return main()
 
-# Fitur daftar pengguna
 def daftar():
     clear_terminal()
     print('===================================')
@@ -64,12 +61,11 @@ def daftar():
         else:
             return main()
 
-    # Cek apakah username sudah ada
     with open(file_pengguna, mode='r', newline='') as file:
         reader = csv.DictReader(file)
         for row in reader:
             if row['username'] == username:
-                print('❌ Username sudah terdaftar. Coba yang lain.\n')
+                print('Username sudah terdaftar. Coba yang lain.\n')
                 return daftar()
 
     password = input('Masukkan password: ').strip()
@@ -79,17 +75,16 @@ def daftar():
 
     konfirmasi = input('Konfirmasi password: ')
     if password != konfirmasi:
-        print('❌ Password tidak cocok. Ulangi lagi.\n')
+        print('Password tidak cocok. Ulangi lagi.\n')
         return daftar()
 
     with open(file_pengguna, mode='a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([username, password])
 
-    input('✅ Akun berhasil dibuat! Tekan Enter untuk kembali ke menu...')
+    input('Akun berhasil dibuat! Tekan Enter untuk kembali ke menu...')
     return main()
 
-# Login utama
 def login():
     clear_terminal()
     print('===================================')
@@ -107,10 +102,9 @@ def login():
     elif pilihan == '3':
         return main()
     else:
-        print('❌ Pilihan tidak valid!\n')
+        print('Pilihan tidak valid!\n')
         return login()
 
-# Login admin dengan rekursi
 def login_admin():
     print('\n== LOGIN ADMIN ==')
     username = input('Username: ')
@@ -120,13 +114,12 @@ def login_admin():
         reader = csv.DictReader(file)
         for row in reader:
             if row['username'] == username and row['password'] == password:
-                print(f'\n✅ Selamat datang, Admin {username}!\n')
-                return  # lanjut ke fitur admin nanti
+                print(f'\nSelamat datang, Admin {username}!\n')
+                return 
 
-    print('❌ Login gagal. Coba lagi.\n')
-    return login_admin()  # rekursif
+    print('Login gagal. Coba lagi.\n')
+    return login_admin()
 
-# Login pengguna dengan rekursi
 def login_pengguna():
     print('\n== LOGIN PENGGUNA ==')
     username = input('Username: ')
@@ -136,15 +129,14 @@ def login_pengguna():
         reader = csv.DictReader(file)
         for row in reader:
             if row['username'] == username and row['password'] == password:
-                print(f'\n✅ Selamat datang, {username}!\n')
+                print(f'\nSelamat datang, {username}!\n')
                 return  # lanjut ke fitur user nanti
 
-    print('❌ Login gagal. Coba lagi.\n')
-    return login_pengguna()  # rekursif
+    print('Login gagal. Coba lagi.\n')
+    return login_pengguna()  
 
 def keluar():
-    print('👋 Terima kasih telah menggunakan Sistem Pemesanan Tiket Bioskop!')
+    print('Terima kasih telah menggunakan Sistem Pemesanan Tiket Bioskop!')
 
-# Jalankan program
 inisialisasi_file()
 main()
