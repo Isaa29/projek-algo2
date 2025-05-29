@@ -19,17 +19,9 @@ def inisialisasi_file():
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def main():
-    clear_terminal()
-    print("""
- _____ _     _                       
-|_   _(_)___| |__   ___ _ __  _   _ 
-  | | | / __| '_ \ / _ \ '_ \| | | |
-  | | | \__ \ | | |  __/ | | | |_| |
-  |_| |_|___/_| |_|\___|_| |_|\__,_|
 """)
     print('===================================')
-    print('TixZone - SISTEM PEMESANAN TIKET BIOSKOP'.center(40))
+    print('PEMESANAN TIKET BIOSKOP TixZone'.center(40))
     print('===================================\n')
 
     print('1. Daftar akun dulu yuk')
