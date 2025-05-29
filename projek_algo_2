@@ -126,7 +126,8 @@ def login_admin():
         for row in reader:
             if row['username'] == username and row['password'] == password:
                 print(f'\nSelamat datang, Admin {username}!\n')
-                return 
+                menu_admin()   # <- Panggil menu_admin() di sini agar lanjut ke menu admin
+                return
 
     print('Login gagal. Coba lagi.\n')
     return login_admin()
@@ -227,6 +228,49 @@ def manajemen_film():
             return menu_admin()
         else:
             print('Pilihan tidak valid.')
+
+def manajemen_jadwal():
+    while True:
+        print('\n=== MANAJEMEN JADWAL TAYANG ===')
+        print('1. Tambah Jadwal')
+        print('2. Lihat Jadwal')
+        print('3. Hapus Jadwal')
+        print('4. Kembali')
+
+        pilihan = input('Pilih menu: ')
+        if pilihan == '1':
+            id_jadwal = input('ID Jadwal: ')
+            id_film = input('ID Film: ')
+            id_studio = input('ID Studio: ')
+            tanggal = input('Tanggal (YYYY-MM-DD): ')
+            waktu = input('Waktu (HH:MM): ')
+            with open(file_jadwal, 'a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([id_jadwal, id_film, id_studio, tanggal, waktu])
+            print('Jadwal berhasil ditambahkan.')
+        elif pilihan == '2':
+            print('\nDaftar Jadwal Tayang:')
+            with open(file_jadwal, 'r', newline='') as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    print(row)
+        elif pilihan == '3':
+            id_jadwal = input('Masukkan ID Jadwal yang ingin dihapus: ')
+            rows = []
+            with open(file_jadwal, 'r', newline='') as file:
+                reader = csv.reader(file)
+                rows = list(reader)
+            with open(file_jadwal, 'w', newline='') as file:
+                writer = csv.writer(file)
+                for row in rows:
+                    if row[0] != id_jadwal:
+                        writer.writerow(row)
+            print('Jadwal berhasil dihapus.')
+        elif pilihan == '4':
+            return menu_admin()
+        else:
+            print('Pilihan tidak valid.')
+
 
 inisialisasi_file()
 main()
