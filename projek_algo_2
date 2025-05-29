@@ -1,6 +1,13 @@
 import csv
 import os
+import datetime
 
+file_film = "film.csv"
+file_jadwal = "jadwal.csv"
+file_studio = "studio.csv"
+file_kursi = "kursi.csv"
+file_transaksi = "transaksi.csv"
+file_riwayat = "riwayat_pemesanan.csv"
 file_pengguna = "akun_pengguna.csv"
 file_admin = "akun_admin.csv"
 
@@ -141,6 +148,85 @@ def login_pengguna():
 
 def keluar():
     print('Terima kasih telah menggunakan Sistem Pemesanan Tiket Bioskop!')
+
+
+def menu_admin():
+    while True:
+        print('\n=== MENU ADMIN ===')
+        print('1. Manajemen Film')
+        print('2. Manajemen Jadwal Tayang')
+        print('3. Manajemen Studio')
+        print('4. Lihat Riwayat Transaksi')
+        print('5. Logout')
+
+        pilihan = input('Pilih menu: ')
+        if pilihan == '1':
+            return manajemen_film()
+        elif pilihan == '2':
+            return manajemen_jadwal()
+        elif pilihan == '3':
+            return manajemen_studio()
+        elif pilihan == '4':
+            return riwayat_transaksi()
+        elif pilihan == '5':
+            return main()
+        else:
+            print('Pilihan tidak valid!\n')
+
+def manajemen_film():
+    while True:
+        print('\n=== MANAJEMEN FILM ===')
+        print('1. Tambah Film')
+        print('2. Hapus Film')
+        print('3. Edit Harga Tiket')
+        print('4. Kembali')
+
+        pilihan = input('Pilih menu: ')
+        if pilihan == '1':
+            id_film = input('ID Film: ')
+            judul = input('Judul: ')
+            genre = input('Genre: ')
+            durasi = input('Durasi (dalam menit): ')
+            harga = input('Harga tiket: ')
+            with open(file_film, 'a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([id_film, judul, genre, durasi, harga])
+            print('Film berhasil ditambahkan.')
+        elif pilihan == '2':
+            id_film = input('Masukkan ID Film yang ingin dihapus: ')
+            rows = []
+            with open(file_film, 'r', newline='') as file:
+                reader = csv.reader(file)
+                rows = list(reader)
+            with open(file_film, 'w', newline='') as file:
+                writer = csv.writer(file)
+                for row in rows:
+                    if row[0] != id_film:
+                        writer.writerow(row)
+            print('Film berhasil dihapus.')
+        elif pilihan == '3':
+            id_film = input('Masukkan ID Film yang ingin diedit: ')
+            harga_baru = input('Masukkan harga tiket baru: ')
+            updated = False
+            rows = []
+            with open(file_film, 'r', newline='') as file:
+                reader = csv.reader(file)
+                for row in reader:
+                    if row[0] == id_film:
+                        row[4] = harga_baru
+                        updated = True
+                    rows.append(row)
+            with open(file_film, 'w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerows(rows)
+            if updated:
+                print('Harga berhasil diperbarui.')
+            else:
+                print('ID film tidak ditemukan.')
+        elif pilihan == '4':
+            return menu_admin()
+        else:
+            print('Pilihan tidak valid.')
 
 inisialisasi_file()
 main()
