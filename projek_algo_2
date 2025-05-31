@@ -23,6 +23,11 @@ def inisialisasi_file():
             writer.writerow(['username', 'password'])
             writer.writerow(['admin1', 'adminpass']) 
 
+    if not os.path.exists(file_film):
+        with open(file_film, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['ID Film', 'Judul', 'Genre', 'Durasi (menit)', 'Harga tiket'])
+
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -181,11 +186,6 @@ def manajemen_film():
         print('2. Hapus Film')
         print('3. Edit Harga Tiket')
         print('4. Kembali')
-
-        if not os.path.exists(file_film):
-            with open(file_film, 'w', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow(['ID Film', 'Judul', 'Genre', 'Durasi (menit)', 'Harga tiket'])
 
         pilihan = input('Pilih menu: ')
         if pilihan == '1':
