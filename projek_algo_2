@@ -195,9 +195,10 @@ def manajemen_film():
             genre = input('Genre: ')
             durasi = input('Durasi (dalam menit): ')
             harga = input('Harga tiket: ')
+            rating = input('Rating (1-10): ')
             with open(file_film, 'a', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow([id_film, judul, genre, durasi, harga])
+                writer.writerow([id_film, judul, genre, durasi, harga, rating])
             print('Film berhasil ditambahkan.')
         elif pilihan == '2':
             id_film = input('Masukkan ID Film yang ingin dihapus: ')
