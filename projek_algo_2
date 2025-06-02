@@ -34,18 +34,19 @@ def clear_terminal():
 
 def header():
     print("""
- _____ _      ______               
+ _____        ______               
 |_   _(_)    |___  /               
   | |  _ __  __ / /  ___  _ __   ___ 
   | | | |\ \/ // /  / _ \| '_ \ / _ \\
   | | | | >  </ /__| (_) | | | |  __/
-  \_/ |_|/_/\_\_____/\___/|_| |_|\___|
+  \_/ |_|/_/\_\____/\___/|_| |_|\___|
                                      
                                      
 """)
 
 def main():
     clear_terminal()
+    header()
 
     print('===================================')
     print('PEMESANAN TIKET BIOSKOP TixZone'.center(40))
@@ -68,6 +69,7 @@ def main():
 
 def daftar():
     clear_terminal()
+    header()
     print('===================================')
     print('DAFTAR AKUN PENGGUNA'.center(35))
     print('===================================\n')
@@ -106,6 +108,7 @@ def daftar():
 
 def login():
     clear_terminal()
+    header()
     print('===================================')
     print('LOGIN'.center(35))
     print('===================================\n')
@@ -125,6 +128,8 @@ def login():
         return login()
 
 def login_admin():
+    clear_terminal()
+    header()
     print('\n== LOGIN ADMIN ==')
     username = input('Username: ')
     password = input('Password: ')
@@ -141,6 +146,8 @@ def login_admin():
     return login_admin()
 
 def login_pengguna():
+    clear_terminal()
+    header()
     print('\n== LOGIN PENGGUNA ==')
     username = input('Username: ')
     password = input('Password: ')
@@ -158,9 +165,13 @@ def login_pengguna():
 
 
 def keluar():
+    clear_terminal()
+    header()
     print('Terima kasih telah menggunakan Sistem Pemesanan Tiket Bioskop!')
 
 def menu_admin():
+    clear_terminal()
+    header()
     while True:
         print('\n=== MENU ADMIN ===')
         print('1. Manajemen Film')
@@ -184,6 +195,8 @@ def menu_admin():
             print('Pilihan tidak valid!\n')
 
 def manajemen_film():
+    clear_terminal()
+    header()
     while True:
         print('\n=== MANAJEMEN FILM ===')
         print('1. Tambah Film')
@@ -240,6 +253,8 @@ def manajemen_film():
             print('Pilihan tidak valid.')
 
 def muat_data_film():
+    clear_terminal()
+    header()
     if not os.path.exists(file_film):
         return []
     daftar_film = []
@@ -262,6 +277,8 @@ def muat_data_film():
     return daftar_film
 
 def manajemen_jadwal():
+    clear_terminal()
+    header()
     while True:
         print("\n=== MANAJEMEN JADWAL TAYANG ===")
         print("1. Buat Jadwal Otomatis")
@@ -282,12 +299,16 @@ def manajemen_jadwal():
             print("Pilihan tidak valid.")
 
 def simpan_jadwal(daftar_jadwal):
+    clear_terminal()
+    header()
     with open(file_jadwal, mode="w", newline="", encoding="utf-8") as file:
         penulis = csv.DictWriter(file, fieldnames=["id_film", "nama_film", "durasi", "jam_mulai", "jam_selesai"])
         penulis.writeheader()
         penulis.writerows(daftar_jadwal)
 
 def muat_jadwal():
+    clear_terminal()
+    header()
     if not os.path.exists(file_jadwal):
         return []
     daftar_jadwal = []
@@ -308,6 +329,8 @@ def muat_jadwal():
     return daftar_jadwal
 
 def pilih_film_dengan_knapsack(daftar_film, kapasitas):
+    clear_terminal()
+    header()
     daftar_terurut = sorted(daftar_film, key=lambda x: x["durasi"])
     total = 0
     hasil = []
@@ -318,11 +341,15 @@ def pilih_film_dengan_knapsack(daftar_film, kapasitas):
     return hasil
 
 def hitung_jam(jam_awal, durasi):
+    clear_terminal()
+    header()
     jam_mulai = jam_awal
     jam_selesai = jam_mulai + timedelta(minutes=durasi)
     return jam_mulai.strftime("%H:%M"), jam_selesai.strftime("%H:%M"), jam_selesai
 
 def tambah_jadwal_otomatis():
+    clear_terminal()
+    header()
     daftar_film = muat_data_film()
     if not daftar_film:
         print("Belum ada data film. Tambahkan film terlebih dahulu.")
@@ -348,15 +375,19 @@ def tambah_jadwal_otomatis():
     print("Jadwal tayang film berhasil dibuat otomatis.")
 
 def lihat_jadwal():
+    clear_terminal()
+    header()
     daftar_jadwal = muat_jadwal()
     if not daftar_jadwal:
-        print("Jadwal tayang belum tersedia.")
+        print("❌ Jadwal tayang belum tersedia.")
         return
     print("\n=== Jadwal Tayang Film ===")
     for jadwal in daftar_jadwal:
         print(f"{jadwal['nama_film']} | Durasi: {jadwal['durasi']} menit | Mulai: {jadwal['jam_mulai']} | Selesai: {jadwal['jam_selesai']}")
 
 def hapus_jadwal():
+    clear_terminal()
+    header()
     if os.path.exists(file_jadwal):
         os.remove(file_jadwal)
         print("Jadwal tayang berhasil dihapus.")
@@ -371,6 +402,8 @@ def riwayat_transaksi():
 
 #PENGGUNA----------------------------------------------------------------------------------------------------------------------
 def menu_pengguna(username):
+    clear_terminal()
+    header()
     while True:
         print('\n=== MENU PENGGUNA ===')
         print('1. Lihat Jadwal Film')
@@ -392,6 +425,8 @@ def menu_pengguna(username):
 
 
 def beli_tiket(username):
+    clear_terminal()
+    header()
     daftar_jadwal = muat_jadwal()
     if not daftar_jadwal:
         print("Belum ada jadwal tayang.")
@@ -451,6 +486,8 @@ def beli_tiket(username):
     print("Tiket berhasil dipesan!")
 
 def simpan_riwayat_transaksi(username, nama_film, jam_mulai, jam_selesai, jumlah_tiket, harga_tiket):
+    clear_terminal()
+    header()
     total_harga = jumlah_tiket * harga_tiket
     waktu_pesan = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     file_exists = os.path.exists(file_riwayat)
@@ -470,6 +507,8 @@ def simpan_riwayat_transaksi(username, nama_film, jam_mulai, jam_selesai, jumlah
         })
 
 def lihat_riwayat_transaksi(username):
+    clear_terminal()
+    header()
     if not os.path.exists(file_riwayat):
         print("Belum ada riwayat transaksi.")
         return
@@ -487,8 +526,6 @@ def lihat_riwayat_transaksi(username):
         print(f"{i}. {row['nama_film']} | {row['jam_mulai']} - {row['jam_selesai']} | "
               f"Jumlah: {row['jumlah_tiket']} | Total: Rp{row['total_harga']} | Waktu: {row['waktu_pesan']}")
 
-
-
-if _name_ == "_main_":
-    inisialisasi_file()
-    main()
+    if _name_ == "_main_":
+        inisialisasi_file()
+        main()
