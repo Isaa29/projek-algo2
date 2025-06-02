@@ -32,8 +32,7 @@ def inisialisasi_file():
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def main():
-    clear_terminal()
+def header():
     print("""
  _____ _      ______               
 |_   _(_)    |___  /               
@@ -44,6 +43,9 @@ def main():
                                      
                                      
 """)
+
+def main():
+    clear_terminal()
 
     print('===================================')
     print('PEMESANAN TIKET BIOSKOP TixZone'.center(40))
