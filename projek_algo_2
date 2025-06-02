@@ -350,7 +350,7 @@ def tambah_jadwal_otomatis():
 def lihat_jadwal():
     daftar_jadwal = muat_jadwal()
     if not daftar_jadwal:
-        print("❌ Jadwal tayang belum tersedia.")
+        print("Jadwal tayang belum tersedia.")
         return
     print("\n=== Jadwal Tayang Film ===")
     for jadwal in daftar_jadwal:
