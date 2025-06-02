@@ -241,16 +241,18 @@ def muat_data_film():
         return []
     daftar_film = []
     with open(file_film, mode="r", newline="", encoding="utf-8") as file:
-        writer = csv.DictReader(file)
-        for baris in writer:
+        reader = csv.DictReader(file)
+        for baris in reader:
             try:
                 durasi = int(baris.get('Durasi (menit)', 0))
+                rating = float(baris.get('Rating', 0))
                 id_film = baris.get('ID Film', '')
                 nama_film = baris.get('Judul', '')
                 daftar_film.append({
                     "id_film": id_film,
                     "nama_film": nama_film,
-                    "durasi": durasi
+                    "durasi": durasi,
+                    "rating": rating
                 })
             except:
                 continue
