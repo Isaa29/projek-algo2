@@ -379,7 +379,7 @@ def lihat_jadwal():
     header()
     daftar_jadwal = muat_jadwal()
     if not daftar_jadwal:
-        print("❌ Jadwal tayang belum tersedia.")
+        print("Jadwal tayang belum tersedia.")
         return
     print("\n=== Jadwal Tayang Film ===")
     for jadwal in daftar_jadwal:
@@ -403,7 +403,6 @@ def riwayat_transaksi():
 #PENGGUNA----------------------------------------------------------------------------------------------------------------------
 def menu_pengguna(username):
     clear_terminal()
-    header()
     while True:
         print('\n=== MENU PENGGUNA ===')
         print('1. Lihat Jadwal Film')
@@ -419,14 +418,14 @@ def menu_pengguna(username):
         elif pilihan == '3':
             lihat_riwayat_transaksi(username)
         elif pilihan == '4':
+            clear_terminal()
             return main()
         else:
-            print('Pilihan tidak valid.')
+            print('Pilihan tidak valid. Silakan pilih lagi.')
 
 
 def beli_tiket(username):
     clear_terminal()
-    header()
     daftar_jadwal = muat_jadwal()
     if not daftar_jadwal:
         print("Belum ada jadwal tayang.")
@@ -436,24 +435,26 @@ def beli_tiket(username):
     for idx, jadwal in enumerate(daftar_jadwal, start=1):
         print(f"{idx}. {jadwal['nama_film']} | {jadwal['jam_mulai']} - {jadwal['jam_selesai']} ({jadwal['durasi']} menit)")
 
-    try:
-        pilihan = int(input("\nPilih nomor film yang ingin dibeli tiketnya: "))
-        if pilihan < 1 or pilihan > len(daftar_jadwal):
-            print("Pilihan tidak valid.")
-            return
-        jadwal_pilihan = daftar_jadwal[pilihan - 1]
-    except ValueError:
-        print("Masukkan angka yang valid.")
-        return
+    while True:
+        try:
+            pilihan = int(input("\nPilih nomor film yang ingin dibeli tiketnya: "))
+            if 1 <= pilihan <= len(daftar_jadwal):
+                jadwal_pilihan = daftar_jadwal[pilihan - 1]
+                break
+            else:
+                print("Pilihan tidak valid. Ulangi.")
+        except ValueError:
+            print("Masukkan angka yang valid.")
 
-    try:
-        jumlah_tiket = int(input("Jumlah tiket yang ingin dibeli: "))
-        if jumlah_tiket < 1:
-            print("Jumlah tiket minimal 1.")
-            return
-    except ValueError:
-        print("Masukkan angka yang valid.")
-        return
+    while True:
+        try:
+            jumlah_tiket = int(input("Jumlah tiket yang ingin dibeli: "))
+            if jumlah_tiket >= 1:
+                break
+            else:
+                print("Jumlah tiket minimal 1.")
+        except ValueError:
+            print("Masukkan angka yang valid.")
 
     harga_tiket = 0
     with open(file_film, mode='r', newline='', encoding='utf-8') as file:
@@ -483,11 +484,12 @@ def beli_tiket(username):
         harga_tiket=harga_tiket
     )
 
-    print("Tiket berhasil dipesan!")
+    print("Tiket berhasil dipesan!!")
+    input("Ingin kembali ke menu? Tekan Enter...")
+    clear_terminal()
+
 
 def simpan_riwayat_transaksi(username, nama_film, jam_mulai, jam_selesai, jumlah_tiket, harga_tiket):
-    clear_terminal()
-    header()
     total_harga = jumlah_tiket * harga_tiket
     waktu_pesan = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     file_exists = os.path.exists(file_riwayat)
@@ -508,7 +510,6 @@ def simpan_riwayat_transaksi(username, nama_film, jam_mulai, jam_selesai, jumlah
 
 def lihat_riwayat_transaksi(username):
     clear_terminal()
-    header()
     if not os.path.exists(file_riwayat):
         print("Belum ada riwayat transaksi.")
         return
@@ -526,6 +527,8 @@ def lihat_riwayat_transaksi(username):
         print(f"{i}. {row['nama_film']} | {row['jam_mulai']} - {row['jam_selesai']} | "
               f"Jumlah: {row['jumlah_tiket']} | Total: Rp{row['total_harga']} | Waktu: {row['waktu_pesan']}")
 
-    if _name_ == "_main_":
-        inisialisasi_file()
-        main()
+
+
+if __name__ == "__main__":
+    inisialisasi_file()
+    main()
