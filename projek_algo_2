@@ -741,6 +741,5 @@ def lihat_riwayat_transaksi(username):
               f"Jumlah: {row['jumlah_tiket']} | Total: Rp{row['total_harga']} | Waktu: {row['waktu_pesan']}")
 
 
-if __name__ == "__main__":
-    inisialisasi_file()
-    main()
+inisialisasi_file()
+main()
