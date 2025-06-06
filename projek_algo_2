@@ -26,10 +26,10 @@ def inisialisasi_file():
     if not os.path.exists(file_film):
         with open(file_film, 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(['ID Film', 'Judul', 'Genre', 'Durasi (menit)', 'Harga tiket', 'Rating'])
+            writer.writerow(['ID Film', 'Judul', 'Genre', 'Durasi (menit)', 'Harga tiket'])
 
     if not os.path.exists(file_studio):
-        with open(file_studio, mode='w', newline='', encoding='utf-8') as file:
+        with open(file_studio, mode='w', newline='' ) as file:
             writer = csv.writer(file)
             writer.writerow(['id_studio', 'nama_studio', 'kapasitas'])
 
@@ -207,62 +207,97 @@ def manajemen_film():
         print('\n=== MANAJEMEN FILM ===')
         print('1. Tambah Film')
         print('2. Hapus Film')
-        print('3. Edit Harga Tiket')
+        print('3. Edit Data Film')
         print('4. Kembali')
 
         pilihan = input('Pilih menu: ')
         if pilihan == '1':
-            id_film = input('ID Film: ')
-            judul = input('Judul: ')
-            genre = input('Genre: ')
-            durasi = input('Durasi (dalam menit): ')
-            harga = input('Harga tiket: ')
-            rating = input('Rating (1-10): ')
-            with open(file_film, 'a', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow([id_film, judul, genre, durasi, harga, rating])
-            print('Film berhasil ditambahkan.')
+            tambah_film()
         elif pilihan == '2':
-            id_film = input('Masukkan ID Film yang ingin dihapus: ')
-            rows = []
-            with open(file_film, 'r', newline='') as file:
-                reader = csv.reader(file)
-                rows = list(reader)
-            with open(file_film, 'w', newline='') as file:
-                writer = csv.writer(file)
-                for row in rows:
-                    if row[0] != id_film:
-                        writer.writerow(row)
-            print('Film berhasil dihapus.')
+            hapus_film()
         elif pilihan == '3':
-            id_film = input('Masukkan ID Film yang ingin diedit: ')
-            harga_baru = input('Masukkan harga tiket baru: ')
-            updated = False
-            rows = []
-            with open(file_film, 'r', newline='') as file:
-                reader = csv.reader(file)
-                for row in reader:
-                    if row[0] == id_film:
-                        row[4] = harga_baru
-                        updated = True
-                    rows.append(row)
-            with open(file_film, 'w', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerows(rows)
-            if updated:
-                print('Harga berhasil diperbarui.')
-            else:
-                print('ID film tidak ditemukan.')
+            edit_data_film()
         elif pilihan == '4':
             return
         else:
             print('Pilihan tidak valid.')
 
+def tambah_film():
+    id_film = input('ID Film: ')
+    judul = input('Judul: ')
+    genre = input('Genre: ')
+    durasi = input('Durasi (dalam menit): ')
+    harga = input('Harga tiket: ')
+    with open(file_film, 'a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([id_film, judul, genre, durasi, harga])
+    print('Film berhasil ditambahkan.')
+
+def hapus_film():
+    id_film = input('Masukkan ID Film yang ingin dihapus: ')
+    rows = []
+    with open(file_film, 'r', newline='') as file:
+        reader = csv.reader(file)
+        rows = list(reader)
+    with open(file_film, 'w', newline='') as file:
+        writer = csv.writer(file)
+        for row in rows:
+            if row[0] != id_film:
+                writer.writerow(row)
+    print('Film berhasil dihapus.')
+
+def edit_data_film():
+    id_film = input('Masukkan ID Film yang ingin diedit: ')
+    rows = []
+    found = False
+    with open(file_film, 'r', newline='') as file:
+        reader = csv.reader(file)
+        rows = list(reader)
+
+    for i, row in enumerate(rows):
+        if row[0] == id_film:
+            found = True
+            while True:
+                print('\n=== Edit Data Film ===')
+                print(f'Judul: {row[1]}')
+                print(f'Genre: {row[2]}')
+                print(f'Durasi: {row[3]}')
+                print(f'Harga: {row[4]}')
+                print('1. Edit Judul')
+                print('2. Edit Genre')
+                print('3. Edit Durasi')
+                print('4. Edit Harga')
+                print('5. Kembali')
+                edit_pilihan = input('Pilih data yang ingin diedit: ')
+
+                if edit_pilihan == '1':
+                    row[1] = input('Masukkan Judul baru: ') or row[1]
+                elif edit_pilihan == '2':
+                    row[2] = input('Masukkan Genre baru: ') or row[2]
+                elif edit_pilihan == '3':
+                    row[3] = input('Masukkan Durasi baru (dalam menit): ') or row[3]
+                elif edit_pilihan == '4':
+                    row[4] = input('Masukkan Harga tiket baru: ') or row[4]
+                elif edit_pilihan == '5':
+                    break
+                else:
+                    print('Pilihan tidak valid.')
+            rows[i] = row
+            break
+
+    if not found:
+        print('ID film tidak ditemukan.')
+    else:
+        with open(file_film, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows(rows)
+        print('Data film berhasil diperbarui.')
+
 def muat_data_film():
     if not os.path.exists(file_film):
         return []
     daftar_film = []
-    with open(file_film, mode="r", newline="", encoding="utf-8") as file:
+    with open(file_film, mode="r", newline="" ) as file:
         reader = csv.DictReader(file)
         for baris in reader:
             try:
@@ -270,39 +305,17 @@ def muat_data_film():
                     "id_film": baris.get("ID Film", ""),
                     "nama_film": baris.get("Judul", ""),
                     "durasi": int(baris.get("Durasi (menit)", 0)),
-                    "rating": float(baris.get("Rating", 0))
                 })
             except:
                 continue
     return daftar_film
 
-def manajemen_jadwal():
-    clear_terminal()
-    header()
-    while True:
-        print("\n=== MANAJEMEN JADWAL TAYANG ===")
-        print("1. Buat Jadwal Otomatis")
-        print("2. Lihat Jadwal")
-        print("3. Hapus Jadwal")
-        print("4. Kembali")
-
-        pilihan = input("Pilih menu: ")
-        if pilihan == "1":
-            tambah_jadwal_otomatis()
-        elif pilihan == "2":
-            lihat_jadwal()
-        elif pilihan == "3":
-            hapus_jadwal()
-        elif pilihan == "4":
-            return
-        else:
-            print("Pilihan tidak valid.")
 
 def simpan_jadwal(daftar_jadwal):
     clear_terminal()
     header()
-    with open(file_jadwal, mode="w", newline="", encoding="utf-8") as file:
-        penulis = csv.DictWriter(file, fieldnames=["id_film", "nama_film", "durasi", "jam_mulai", "jam_selesai", "id_studio"])
+    with open(file_jadwal, mode="w", newline="" ) as file:
+        penulis = csv.DictWriter(file, fieldnames=["id_film", "durasi", "jam_mulai", "jam_selesai", "id_studio"])
         penulis.writeheader()
         penulis.writerows(daftar_jadwal)
 
@@ -312,14 +325,13 @@ def muat_jadwal():
     if not os.path.exists(file_jadwal):
         return []
     daftar_jadwal = []
-    with open(file_jadwal, mode="r", newline="", encoding="utf-8") as file:
+    with open(file_jadwal, mode="r", newline="" ) as file:
         writer = csv.DictReader(file)
         for baris in writer:
             try:
                 durasi = int(baris.get('durasi', 0))
                 daftar_jadwal.append({
                     "id_film": baris.get("id_film", ""),
-                    "nama_film": baris.get("nama_film", ""),
                     "durasi": durasi,
                     "jam_mulai": baris.get("jam_mulai", ""),
                     "jam_selesai": baris.get("jam_selesai", ""),
@@ -329,105 +341,238 @@ def muat_jadwal():
                 continue
     return daftar_jadwal
 
+def manajemen_jadwal():
+    while True:
+        clear_terminal()
+        header()
+        print("\n=== MANAJEMEN JADWAL TAYANG ===")
+        print("1. Buat Jadwal")
+        print("2. Lihat Jadwal")
+        print("3. Edit Jadwal")
+        print("4. Hapus Jadwal")
+        print("5. Kembali")
 
-def pilih_film_dengan_knapsack(daftar_film, kapasitas):
-    clear_terminal()
-    header()
-    n = len(daftar_film)
-    if n == 0:
+        pilihan = input("Pilih menu: ")
+        if pilihan == "1":
+            tambah_jadwal()
+        elif pilihan == "2":
+            lihat_jadwal()
+        elif pilihan == "3":
+            edit_jadwal()
+        elif pilihan == "4":
+            hapus_jadwal()
+        elif pilihan == "5":
+            break
+        else:
+            print("Pilihan tidak valid.")
+            input("Tekan Enter untuk ulang...")
+
+def muat_jadwal():
+    if not os.path.exists(file_jadwal):
         return []
-    dp = [[0 for _ in range(kapasitas + 1)] for _ in range(n + 1)]
-    for i in range(1, n + 1):
-        durasi = daftar_film[i - 1]['durasi']
-        rating = daftar_film[i - 1]['rating']
-        for w in range(kapasitas + 1):
-            if durasi <= w:
-                dp[i][w] = max(dp[i - 1][w], dp[i - 1][w - durasi] + rating)
-            else:
-                dp[i][w] = dp[i - 1][w]
-    w = kapasitas
-    hasil = []
-    for i in range(n, 0, -1):
-        if dp[i][w] != dp[i - 1][w]:
-            film = daftar_film[i - 1]
-            hasil.append(film)
-            w -= film['durasi']
-    hasil.reverse()
-    return hasil
+    daftar_jadwal = []
+    with open(file_jadwal, mode="r", newline="") as file:
+        reader = csv.DictReader(file)
+        for baris in reader:
+            try:
+                durasi = int(baris.get('durasi', 0))
+                daftar_jadwal.append({
+                    "id_film": baris.get("id_film", ""),
+                    "durasi": durasi,
+                    "jam_mulai": baris.get("jam_mulai", ""),
+                    "jam_selesai": baris.get("jam_selesai", ""),
+                    "id_studio": baris.get("id_studio", "")
+                })
+            except:
+                continue
+    return daftar_jadwal
 
-def hitung_jam(jam_awal, durasi):
+def simpan_jadwal(daftar_jadwal):
+    with open(file_jadwal, mode="w", newline="") as file:
+        penulis = csv.DictWriter(file, fieldnames=["id_film", "durasi", "jam_mulai", "jam_selesai", "id_studio"])
+        penulis.writeheader()
+        penulis.writerows(daftar_jadwal)
+
+
+def tambah_jadwal():
     clear_terminal()
     header()
-    jam_mulai = jam_awal
-    jam_selesai = jam_mulai + timedelta(minutes=durasi)
-    return jam_mulai.strftime("%H:%M"), jam_selesai.strftime("%H:%M"), jam_selesai
 
-def tambah_jadwal_otomatis():
-    clear_terminal()
-    header()
     daftar_film = muat_data_film()
     if not daftar_film:
-        print("Belum ada data film. Tambahkan film terlebih dahulu.")
+        print("Belum ada data film.")
+        input("Tekan Enter untuk kembali...")
         return
-    if not os.path.exists(file_studio):
-        print("Belum ada data studio. Tambahkan studio terlebih dahulu.")
-        return
-    with open(file_studio, mode='r', newline='', encoding='utf-8') as file:
-        reader = csv.DictReader(file)
-        studios = list(reader)
-    if not studios:
-        print("Data studio kosong.")
-        return
-    studio = studios[0]
-    kapasitas = 720
-    jam_awal = datetime.strptime("10:00", "%H:%M")
-    
-    hasil_jadwal = []
-    total_durasi = 0
-    for film in daftar_film:
-        if total_durasi + film["durasi"] > kapasitas:
-            break
-        jam_mulai, jam_selesai, jam_awal = hitung_jam(jam_awal, film["durasi"])
-        hasil_jadwal.append({
-            "id_film": film["id_film"],
-            "nama_film": film["nama_film"],
-            "durasi": film["durasi"],
-            "jam_mulai": jam_mulai,
-            "jam_selesai": jam_selesai,
-            "id_studio": studio["id_studio"]
-        })
-        total_durasi += film["durasi"]
 
-    simpan_jadwal(hasil_jadwal)
-    print("Jadwal tayang film berhasil dibuat otomatis.")
-    print(f"Total Film Dijadwalkan: {len(hasil_jadwal)}")
-    print(f"Total Durasi: {total_durasi} menit dari {kapasitas} menit.")
+    if not os.path.exists(file_studio):
+        print("Belum ada data studio.")
+        input("Tekan Enter untuk kembali...")
+        return
+
+    with open(file_studio, mode='r', newline='') as file:
+        daftar_studio = list(csv.DictReader(file))
+
+    if not daftar_studio:
+        print("Belum ada data studio.")
+        input("Tekan Enter untuk kembali...")
+        return
+
+    print("\n=== Daftar Film ===")
+    for film in daftar_film:
+        print(f"{film['id_film']} - {film['nama_film']} ({film['durasi']} menit)")
+
+    print("\n=== Daftar Studio ===")
+    for studio in daftar_studio:
+        print(f"{studio['id_studio']} - {studio['nama_studio']}")
+
+    id_film = input("Masukkan ID Film: ")
+    film = next((f for f in daftar_film if f["id_film"] == id_film), None)
+    if not film:
+        print("ID Film tidak ditemukan.")
+        input("Tekan Enter untuk kembali...")
+        return
+
+    id_studio = input("Masukkan ID Studio: ")
+    studio = next((s for s in daftar_studio if s["id_studio"] == id_studio), None)
+    if not studio:
+        print("ID Studio tidak ditemukan.")
+        input("Tekan Enter untuk kembali...")
+        return
+
+    semua_jadwal = muat_jadwal()
+    jam_mulai = datetime.strptime("10:00", "%H:%M")
+    for jadwal in semua_jadwal:
+        if jadwal["id_studio"] == id_studio:
+            jam_selesai = datetime.strptime(jadwal["jam_selesai"], "%H:%M")
+            if jam_selesai > jam_mulai:
+                jam_mulai = jam_selesai
+
+    durasi = int(film["durasi"])
+    jam_selesai = jam_mulai + timedelta(minutes=durasi)
+
+    jam_mulai_fmt = jam_mulai.strftime("%H:%M")
+    jam_selesai_fmt = jam_selesai.strftime("%H:%M")
+
+    semua_jadwal.append({
+        "id_film": film["id_film"],
+        "durasi": durasi,
+        "jam_mulai": jam_mulai_fmt,
+        "jam_selesai": jam_selesai_fmt,
+        "id_studio": id_studio
+    })
+
+    simpan_jadwal(semua_jadwal)
+    print("Jadwal berhasil ditambahkan otomatis.")
+    input("Tekan Enter untuk kembali...")
 
 def lihat_jadwal():
     clear_terminal()
     header()
+
     daftar_jadwal = muat_jadwal()
     if not daftar_jadwal:
         print("Jadwal tayang belum tersedia.")
+        input("Tekan Enter untuk kembali...")
         return
-    
-    with open(file_studio, mode='r', newline='', encoding='utf-8') as file:
+
+    if not os.path.exists(file_studio):
+        print("Data studio tidak ditemukan.")
+        input("Tekan Enter untuk kembali...")
+        return
+
+    with open(file_studio, mode='r', newline='') as file:
         reader = csv.DictReader(file)
         studio_dict = {row['id_studio']: row['nama_studio'] for row in reader}
+
+    daftar_film = muat_data_film()
+    film_dict = {film['id_film']: film['nama_film'] for film in daftar_film}
 
     print("\n=== Jadwal Tayang Film ===")
     for jadwal in daftar_jadwal:
         nama_studio = studio_dict.get(jadwal['id_studio'], "Studio tidak diketahui")
-        print(f"{jadwal['nama_film']} | Durasi: {jadwal['durasi']} menit | Mulai: {jadwal['jam_mulai']} | Selesai: {jadwal['jam_selesai']} | Studio: {nama_studio}")
+        nama_film = film_dict.get(jadwal['id_film'], "Film tidak diketahui")
+        print(f"{nama_film} | Durasi: {jadwal['durasi']} menit | Mulai: {jadwal['jam_mulai']} | "
+              f"Selesai: {jadwal['jam_selesai']} | Studio: {nama_studio}")
+
+    input("\nTekan Enter untuk kembali...")
 
 def hapus_jadwal():
-    clear_terminal()
-    header()
-    if os.path.exists(file_jadwal):
-        os.remove(file_jadwal)
-        print("Jadwal tayang berhasil dihapus.")
-    else:
-        print("Tidak ada jadwal tayang yang bisa dihapus.")
+    daftar_jadwal = muat_jadwal()
+    if not daftar_jadwal:
+        print("Jadwal tayang belum tersedia.")
+        input("Tekan Enter untuk kembali...")
+        return
+
+    print("\n=== Hapus Jadwal ===")
+    for i, jadwal in enumerate(daftar_jadwal, start=1):
+        print(f"{i}. Film ID: {jadwal['id_film']} | Jam Mulai: {jadwal['jam_mulai']} | Studio: {jadwal['id_studio']}")
+
+    try:
+        pilihan = int(input("Pilih nomor jadwal yang ingin dihapus: "))
+        if 1 <= pilihan <= len(daftar_jadwal):
+            jadwal_terhapus = daftar_jadwal.pop(pilihan - 1)
+            simpan_jadwal(daftar_jadwal)
+            print("Jadwal berhasil dihapus.")
+        else:
+            print("Pilihan tidak valid.")
+    except ValueError:
+        print("Input tidak valid.")
+    input("Tekan Enter untuk kembali...")
+
+def edit_jadwal():
+    daftar_jadwal = muat_jadwal()
+    daftar_film = muat_data_film()
+
+    if not daftar_jadwal:
+        print("Jadwal tayang belum tersedia.")
+        input("Tekan Enter untuk kembali...")
+        return
+    if not daftar_film:
+        print("Data film tidak tersedia.")
+        input("Tekan Enter untuk kembali...")
+        return
+
+    print("\n=== Edit Jadwal ===")
+    for i, jadwal in enumerate(daftar_jadwal, start=1):
+        print(f"{i}. Film ID: {jadwal['id_film']} | Jam Mulai: {jadwal['jam_mulai']} | Studio: {jadwal['id_studio']}")
+
+    try:
+        pilihan = int(input("Pilih nomor jadwal yang ingin diedit: "))
+        if 1 <= pilihan <= len(daftar_jadwal):
+            jadwal_edit = daftar_jadwal[pilihan - 1]
+
+            print("\nDaftar Film:")
+            for film in daftar_film:
+                print(f"{film['id_film']} - {film['nama_film']} ({film['durasi']} menit)")
+            id_film_baru = input("Masukkan ID Film baru (kosongkan jika tidak ingin ganti): ")
+            if id_film_baru:
+                film_baru = next((f for f in daftar_film if f["id_film"] == id_film_baru), None)
+                if not film_baru:
+                    print("ID Film tidak ditemukan.")
+                    input("Tekan Enter untuk kembali...")
+                    return
+                jadwal_edit["id_film"] = film_baru["id_film"]
+                jadwal_edit["durasi"] = int(film_baru["durasi"])
+
+            jam_mulai_input = input("Masukkan jam mulai baru (HH:MM) (kosongkan jika tidak ingin ganti): ")
+            if jam_mulai_input:
+                try:
+                    jam_mulai = datetime.strptime(jam_mulai_input, "%H:%M")
+                    jam_selesai = jam_mulai + timedelta(minutes=jadwal_edit["durasi"])
+                    jadwal_edit["jam_mulai"] = jam_mulai.strftime("%H:%M")
+                    jadwal_edit["jam_selesai"] = jam_selesai.strftime("%H:%M")
+                except ValueError:
+                    print("Format jam tidak valid.")
+                    input("Tekan Enter untuk kembali...")
+                    return
+
+            simpan_jadwal(daftar_jadwal)
+            print("Jadwal berhasil diedit.")
+        else:
+            print("Pilihan tidak valid.")
+    except ValueError:
+        print("Input tidak valid.")
+    input("Tekan Enter untuk kembali...")
 
 def manajemen_studio():
     clear_terminal()
@@ -464,7 +609,7 @@ def lihat_studio():
         print("Belum ada data studio.")
         input("\nTekan Enter untuk kembali...")
         return
-    with open(file_studio, mode='r', newline='', encoding='utf-8') as file:
+    with open(file_studio, mode='r', newline='' ) as file:
         reader = csv.DictReader(file)
         studios = list(reader)
         if not studios:
@@ -486,20 +631,20 @@ def tambah_studio():
         return tambah_studio()
 
     if os.path.exists(file_studio):
-        with open(file_studio, mode='r', newline='', encoding='utf-8') as file:
+        with open(file_studio, mode='r', newline='' ) as file:
             reader = csv.DictReader(file)
             for row in reader:
                 if row['id_studio'] == id_studio:
                     print("ID Studio sudah ada. Gunakan ID yang lain.\n")
                     return tambah_studio()
     
-    with open(file_studio, mode='a', newline='', encoding='utf-8') as file:
+    with open(file_studio, mode='a', newline='' ) as file:
         fieldnames = ['id_studio', 'nama_studio', 'kapasitas']
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writerow({'id_studio': id_studio, 'nama_studio': nama_studio, 'kapasitas': kapasitas})
     
     file_kursi = f"kursi_{id_studio}.csv"
-    with open(file_kursi, mode='w', newline='', encoding='utf-8') as file:
+    with open(file_kursi, mode='w', newline='' ) as file:
         fieldnames = ['no_kursi', 'status']  # status: kosong atau terisi
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
@@ -519,7 +664,7 @@ def hapus_studio():
 
     data_baru = []
     ditemukan = False
-    with open(file_studio, mode='r', newline='', encoding='utf-8') as file:
+    with open(file_studio, mode='r', newline='' ) as file:
         reader = csv.DictReader(file)
         for row in reader:
             if row['id_studio'] != id_studio:
@@ -527,7 +672,7 @@ def hapus_studio():
             else:
                 ditemukan = True
     if ditemukan:
-        with open(file_studio, mode='w', newline='', encoding='utf-8') as file:
+        with open(file_studio, mode='w', newline='' ) as file:
             fieldnames = ['id_studio', 'nama_studio', 'kapasitas']
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
@@ -552,7 +697,7 @@ def tampilkan_kursi(id_studio):
         input("\nTekan Enter untuk kembali...")
         return
 
-    with open(file_kursi, mode='r', newline='', encoding='utf-8') as file:
+    with open(file_kursi, mode='r', newline='' ) as file:
         reader = csv.DictReader(file)
         kursi_list = list(reader)
     
@@ -581,7 +726,7 @@ def riwayat_transaksi():
         input("\nTekan Enter untuk kembali...")
         return
 
-    with open(file_riwayat, mode='r', newline='', encoding='utf-8') as file:
+    with open(file_riwayat, mode='r', newline='' ) as file:
         reader = csv.DictReader(file)
         data = list(reader)
 
@@ -605,18 +750,18 @@ def menu_pengguna(username):
     clear_terminal()
     while True:
         print('\n=== MENU PENGGUNA ===')
-        print('1. Lihat Jadwal Film')
-        print('2. Beli Tiket')
-        print('3. Riwayat Transaksi')
+        print('1. Beli Tiket')
+        print('2. Riwayat Pemesanan')
+        print('3. Beri Rating Film')
         print('4. Logout')
 
         pilihan = input('Pilih menu: ')
         if pilihan == '1':
-            lihat_jadwal()
-        elif pilihan == '2':
             beli_tiket(username)
-        elif pilihan == '3':
+        elif pilihan == '2':
             lihat_riwayat_transaksi(username)
+        #elif pilihan == '3':
+            #beri_rating_film(username)
         elif pilihan == '4':
             clear_terminal()
             return main()
@@ -624,89 +769,109 @@ def menu_pengguna(username):
             print('Pilihan tidak valid. Silakan pilih lagi.')
 
 def beli_tiket(username):
+    while True:
+        clear_terminal()
+        print("=== BELI TIKET ===")
+        print("1. Cari Film")
+        print("2. Tampilkan Semua Film")
+        print("3. Kembali ke Menu")
+
+        pilihan = input("Pilih opsi: ")
+
+        if pilihan == '1':
+            film_terpilih = cari_dan_pilih_film()
+            if film_terpilih:
+                proses_pembelian(username, film_terpilih)
+                break  
+        elif pilihan == '2':
+            film_terpilih = tampilkan_dan_pilih_film()
+            if film_terpilih:
+                proses_pembelian(username, film_terpilih)
+                break
+        elif pilihan == '3':
+            return  # kembali ke menu pengguna
+        else:
+            print("Pilihan tidak valid. Silakan coba lagi.")
+            input("Tekan Enter untuk melanjutkan...")
+
+def cari_dan_pilih_film():
     clear_terminal()
-    daftar_jadwal = muat_jadwal()
-    if not daftar_jadwal:
-        print("Belum ada jadwal tayang.")
-        return
+    print("=== CARI FILM ===")
+    keyword = input("Masukkan judul atau genre film: ").lower()
+    film_list = []
 
-    print("\n=== DAFTAR JADWAL TAYANG ===")
-    for idx, jadwal in enumerate(daftar_jadwal, start=1):
-        print(f"{idx}. {jadwal['nama_film']} | {jadwal['jam_mulai']} - {jadwal['jam_selesai']} ({jadwal['durasi']} menit)")
+    if not os.path.exists(file_film):
+        print("Data film tidak ditemukan.")
+        input("Tekan Enter untuk kembali...")
+        return None
 
-    while True:
-        try:
-            pilihan = int(input("\nPilih nomor film yang ingin dibeli tiketnya: "))
-            if 1 <= pilihan <= len(daftar_jadwal):
-                jadwal_pilihan = daftar_jadwal[pilihan - 1]
-                break
-            else:
-                print("Pilihan tidak valid. Ulangi.")
-        except ValueError:
-            print("Masukkan angka yang valid.")
-
-    while True:
-        try:
-            jumlah_tiket = int(input("Jumlah tiket yang ingin dibeli: "))
-            if jumlah_tiket >= 1:
-                break
-            else:
-                print("Jumlah tiket minimal 1.")
-        except ValueError:
-            print("Masukkan angka yang valid.")
-
-    harga_tiket = 0
-    with open(file_film, mode='r', newline='', encoding='utf-8') as file:
+    with open(file_film, mode='r', newline='') as file:
         reader = csv.DictReader(file)
-        for film in reader:
-            if film['ID Film'] == jadwal_pilihan['id_film']:
-                harga_tiket = int(film['Harga tiket'])
-                break
+        for row in reader:
+            if keyword in row["Judul"].lower() or keyword in row["Genre"].lower():
+                film_list.append(row)
 
-    if harga_tiket == 0:
-        print("Gagal mendapatkan harga tiket.")
-        return
+    if not film_list:
+        print("Film tidak ditemukan.")
+        input("Tekan Enter untuk kembali...")
+        return None
 
-    total = harga_tiket * jumlah_tiket
-    print(f"\nTotal harga: Rp{total}")
-    konfirmasi = input("Lanjutkan pembelian? (y/n): ").lower()
-    if konfirmasi != 'y':
-        print("Pembelian dibatalkan.")
-        return
+    print("\nHasil pencarian:")
+    for idx, film in enumerate(film_list, start=1):
+        print(f"{idx}. {film['Judul']} | Genre: {film['Genre']} | Durasi: {film['Durasi (menit)']} menit | Harga: {film['Harga tiket']}")
 
-    waktu_pesan = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    pilihan = input("Pilih nomor film untuk beli (atau 0 untuk batal): ")
+    if pilihan.isdigit():
+        pilihan = int(pilihan)
+        if pilihan == 0:
+            return None
+        elif 1 <= pilihan <= len(film_list):
+            return film_list[pilihan - 1]
 
-    simpan_riwayat_transaksi(
-        username=username,
-        nama_film=jadwal_pilihan['nama_film'],
-        jam_mulai=jadwal_pilihan['jam_mulai'],
-        jam_selesai=jadwal_pilihan['jam_selesai'],
-        jumlah_tiket=jumlah_tiket,
-        harga_tiket=harga_tiket
-    )
+    print("Pilihan tidak valid.")
+    input("Tekan Enter untuk kembali...")
+    return None
 
+def tampilkan_dan_pilih_film():
     clear_terminal()
-    print("="*40)
-    print("         STRUK PEMBELIAN TIKET         ")
-    print("="*40)
-    print(f"User         : {username}")
-    print(f"Film         : {jadwal_pilihan['nama_film']}")
-    print(f"Jam Tayang   : {jadwal_pilihan['jam_mulai']} - {jadwal_pilihan['jam_selesai']}")
-    print(f"Jumlah Tiket : {jumlah_tiket}")
-    print(f"Harga/Tiket  : Rp{harga_tiket}")
-    print(f"Total Bayar  : Rp{total}")
-    print(f"Waktu Beli   : {waktu_pesan}")
-    print("="*40)
-    print("Terima kasih telah membeli tiket di TixZone!")
-    print("="*40)
-    input("Tekan Enter untuk kembali ke menu...")
-    clear_terminal()
+    print("=== DAFTAR FILM ===")
+    film_list = []
+
+    if not os.path.exists(file_film):
+        print("Data film tidak ditemukan.")
+        input("Tekan Enter untuk kembali...")
+        return None
+
+    with open(file_film, mode='r', newline='') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            film_list.append(row)
+
+    if not film_list:
+        print("Belum ada film tersedia.")
+        input("Tekan Enter untuk kembali...")
+        return None
+
+    for idx, film in enumerate(film_list, start=1):
+        print(f"{idx}. {film['Judul']} | Genre: {film['Genre']} | Durasi: {film['Durasi (menit)']} menit | Harga: {film['Harga tiket']}")
+
+    pilihan = input("Pilih nomor film untuk beli (atau 0 untuk batal): ")
+    if pilihan.isdigit():
+        pilihan = int(pilihan)
+        if pilihan == 0:
+            return None
+        elif 1 <= pilihan <= len(film_list):
+            return film_list[pilihan - 1]
+
+    print("Pilihan tidak valid.")
+    input("Tekan Enter untuk kembali...")
+    return None
 
 def simpan_riwayat_transaksi(username, nama_film, jam_mulai, jam_selesai, jumlah_tiket, harga_tiket):
     total_harga = jumlah_tiket * harga_tiket
     waktu_pesan = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     file_exists = os.path.exists(file_riwayat)
-    with open(file_riwayat, mode='a', newline='', encoding='utf-8') as file:
+    with open(file_riwayat, mode='a', newline='' ) as file:
         fieldnames = ['username', 'nama_film', 'jam_mulai', 'jam_selesai', 'jumlah_tiket', 'total_harga', 'waktu_pesan']
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         if not file_exists:
@@ -728,7 +893,7 @@ def lihat_riwayat_transaksi(username):
         return
 
     print(f"\n=== Riwayat Transaksi: {username} ===")
-    with open(file_riwayat, mode='r', newline='', encoding='utf-8') as file:
+    with open(file_riwayat, mode='r', newline='') as file:
         reader = csv.DictReader(file)
         riwayat = [row for row in reader if row['username'] == username]
 
