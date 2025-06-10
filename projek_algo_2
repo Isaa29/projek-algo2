@@ -1024,6 +1024,72 @@ def tampilkan_dan_pilih_film():
     input("Tekan Enter untuk kembali...")
 
 
+def proses_pembelian(username, film_terpilih):
+    clear_terminal()
+    print(f"=== PEMBELIAN TIKET: {film_terpilih['Judul']} ===")
+    
+    daftar_jadwal = muat_jadwal()
+    jadwal_film = [j for j in daftar_jadwal if j['id_film'] == film_terpilih['ID Film']]
+    
+    if not jadwal_film:
+        print("Tidak ada jadwal tersedia untuk film ini.")
+        input("Tekan Enter untuk kembali...")
+        return
+    
+    print("\nJadwal yang tersedia:")
+    for idx, jadwal in enumerate(jadwal_film, start=1):
+        print(f"{idx}. {jadwal['jam_mulai']} - {jadwal['jam_selesai']} | Studio: {jadwal['id_studio']}")
+    
+    pilihan_jadwal = input("Pilih nomor jadwal (atau 0 untuk batal): ")
+    if not pilihan_jadwal.isdigit() or int(pilihan_jadwal) == 0:
+        return
+    
+    pilihan_jadwal = int(pilihan_jadwal)
+    if not (1 <= pilihan_jadwal <= len(jadwal_film)):
+        print("Pilihan tidak valid.")
+        input("Tekan Enter untuk kembali...")
+        return
+    
+    jadwal_dipilih = jadwal_film[pilihan_jadwal - 1]
+    
+    while True:
+        try:
+            jumlah_tiket = int(input("Masukkan jumlah tiket: "))
+            if jumlah_tiket <= 0:
+                print("Jumlah tiket harus lebih dari 0.")
+                continue
+            break
+        except ValueError:
+            print("Input harus berupa angka.")
+    
+    harga_tiket = int(film_terpilih['Harga tiket'])
+    total_harga = jumlah_tiket * harga_tiket
+    
+ 
+    print(f"\n=== KONFIRMASI PEMBELIAN ===")
+    print(f"Film: {film_terpilih['Judul']}")
+    print(f"Jadwal: {jadwal_dipilih['jam_mulai']} - {jadwal_dipilih['jam_selesai']}")
+    print(f"Studio: {jadwal_dipilih['id_studio']}")
+    print(f"Jumlah tiket: {jumlah_tiket}")
+    print(f"Harga per tiket: Rp{harga_tiket}")
+    print(f"Total harga: Rp{total_harga}")
+    
+    konfirmasi = input("\nKonfirmasi pembelian? (y/n): ").lower()
+    if konfirmasi == 'y':
+        simpan_riwayat_transaksi(
+            username, 
+            film_terpilih['Judul'], 
+            jadwal_dipilih['jam_mulai'], 
+            jadwal_dipilih['jam_selesai'], 
+            jumlah_tiket, 
+            harga_tiket
+        )
+        print("\nTiket berhasil dibeli!")
+        print("Terima kasih atas pembelian Anda.")
+    else:
+        print("Pembelian dibatalkan.")
+    
+    input("Tekan Enter untuk kembali...")
 
 
 def simpan_riwayat_transaksi(username, nama_film, jam_mulai, jam_selesai, jumlah_tiket, harga_tiket):
