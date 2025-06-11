@@ -58,7 +58,7 @@ def main():
     print('PEMESANAN TIKET BIOSKOP TixZone'.center(40))
     print('===================================\n')
 
-    print('1. Daftar akun dulu yuk')
+    print('1. Daftar')
     print('2. Login')
     print('3. Keluar\n')
 
@@ -118,8 +118,8 @@ def login():
     print('===================================')
     print('LOGIN'.center(35))
     print('===================================\n')
-    print('1. Login sebagai Admin')
-    print('2. Login sebagai Pengguna')
+    print('1. Admin')
+    print('2. Pengguna')
     print('3. Kembali')
 
     pilihan = input('Pilih jenis login: ')
@@ -141,7 +141,7 @@ def login_admin():
     while True:
         username = input('Username: ').strip()
         if not username:
-            pilihan = input('Username kosong. Mau kembali ke menu utama? (y/n): ').lower()
+            pilihan = input('Username tidak ditemukan. Mau kembali ke menu utama? (y/n): ').lower()
             if pilihan == 'y':
                 return login()
             else:
@@ -149,7 +149,7 @@ def login_admin():
 
         password = input('Password: ').strip()
         if not password:
-            pilihan = input('Password kosong. Mau kembali ke menu utama? (y/n): ').lower()
+            pilihan = input('Password salah. Mau kembali ke menu utama? (y/n): ').lower()
             if pilihan == 'y':
                 return login()
             else:
@@ -173,7 +173,7 @@ def login_pengguna():
     while True:
         username = input('Username: ').strip()
         if not username:
-            pilihan = input('Username kosong. Mau kembali ke menu utama? (y/n): ').lower()
+            pilihan = input('Username tidak ditemukan. Mau kembali ke menu utama? (y/n): ').lower()
             if pilihan == 'y':
                 return login()
             else:
@@ -181,7 +181,7 @@ def login_pengguna():
 
         password = input('Password: ').strip()
         if not password:
-            pilihan = input('Password kosong. Mau kembali ke menu utama? (y/n): ').lower()
+            pilihan = input('Password salah. Mau kembali ke menu utama? (y/n): ').lower()
             if pilihan == 'y':
                 return login()
             else:
@@ -200,7 +200,7 @@ def login_pengguna():
 def keluar():
     clear_terminal()
     header()
-    print('Terima kasih telah menggunakan Sistem Pemesanan Tiket Bioskop!')
+    print('Terima kasih telah menggunakan TixZone!')
 
 def menu_admin():
     clear_terminal()
