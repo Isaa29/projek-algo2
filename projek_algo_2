@@ -957,6 +957,69 @@ def tampilkan_kursi(id_studio):
     print("\nKeterangan: [ ] = Kosong, [X] = Terisi\n")
     input("Tekan Enter untuk kembali...")
 
+def pilih_kursi(id_studio):
+    while True:
+        tampilkan_kursi(id_studio)
+        print("=== PILIH KURSI ===")
+        nomor_kursi = input("Masukkan nomor kursi yang ingin dipilih (pisahkan dengan koma jika lebih dari satu, atau 0 untuk batal): ")
+        
+        if nomor_kursi == '0':
+            return None
+        
+        kursi_dipilih = [k.strip().upper() for k in nomor_kursi.split(',')]  # Bersihkan input
+        
+        file_kursi = f"kursi_{id_studio}.csv"
+        with open(file_kursi, mode='r', newline='') as file:
+            reader = csv.DictReader(file)
+            kursi_list = list(reader)
+        
+        kursi_tersedia = []
+        kursi_tidak_valid = []
+        kursi_sudah_terisi = []
+        
+        for nomor in kursi_dipilih:
+            kursi = next((k for k in kursi_list if k['no_kursi'] == nomor), None)
+            if not kursi:
+                kursi_tidak_valid.append(nomor)
+            elif kursi['status'] == 'terisi':
+                kursi_sudah_terisi.append(nomor)
+            else:
+                kursi_tersedia.append(kursi)
+        
+        if kursi_tidak_valid:
+            print(f"Kursi dengan nomor {', '.join(kursi_tidak_valid)} tidak valid.")
+        if kursi_sudah_terisi:
+            print(f"Kursi dengan nomor {', '.join(kursi_sudah_terisi)} sudah terisi.")
+        
+        if kursi_tidak_valid or kursi_sudah_terisi:
+            input("Tekan Enter untuk mencoba lagi...")
+            continue
+        
+        if not kursi_tersedia:
+            print("Tidak ada kursi yang dipilih.")
+            input("Tekan Enter untuk mencoba lagi...")
+            continue
+        
+        return kursi_tersedia
+
+def update_status_kursi(id_studio, no_kursi, status):
+    file_kursi = f"kursi_{id_studio}.csv"
+    
+    with open(file_kursi, mode='r', newline='') as file:
+        reader = csv.DictReader(file)
+        kursi_list = list(reader)
+    
+    for kursi in kursi_list:
+        if kursi['no_kursi'] == no_kursi:
+            kursi['status'] = status
+            break
+            
+    with open(file_kursi, mode='w', newline='') as file:
+        fieldnames = kursi_list[0].keys()
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(kursi_list)
+
 def riwayat_transaksi():
     clear_terminal()
     header()
@@ -1134,12 +1197,22 @@ def proses_pembelian(username, film_terpilih):
         return
     
     jadwal_dipilih = jadwal_film[pilihan_jadwal - 1]
-    
+    id_studio = jadwal_dipilih['id_studio']
+
+    kursi_terpilih = pilih_kursi(id_studio)
+    if not kursi_terpilih:
+        print("Pembelian dibatalkan.")
+        input("Tekan Enter untuk kembali...")
+        return
+
     while True:
         try:
             jumlah_tiket = int(input("Masukkan jumlah tiket: "))
             if jumlah_tiket <= 0:
                 print("Jumlah tiket harus lebih dari 0.")
+                continue
+            if jumlah_tiket > len(kursi_terpilih):
+                print(f"Anda hanya memilih {len(kursi_terpilih)} kursi. Pilih jumlah tiket sesuai atau kurang dari jumlah kursi.")
                 continue
             break
         except ValueError:
@@ -1147,18 +1220,21 @@ def proses_pembelian(username, film_terpilih):
     
     harga_tiket = int(film_terpilih['Harga tiket'])
     total_harga = jumlah_tiket * harga_tiket
-    
- 
+
     print(f"\n=== KONFIRMASI PEMBELIAN ===")
     print(f"Film: {film_terpilih['Judul']}")
     print(f"Jadwal: {jadwal_dipilih['jam_mulai']} - {jadwal_dipilih['jam_selesai']}")
-    print(f"Studio: {jadwal_dipilih['id_studio']}")
+    print(f"Studio: {id_studio}")
     print(f"Jumlah tiket: {jumlah_tiket}")
     print(f"Harga per tiket: Rp{harga_tiket}")
     print(f"Total harga: Rp{total_harga}")
+    print(f"Kursi dipilih: {', '.join([k['no_kursi'] for k in kursi_terpilih[:jumlah_tiket]])}")
     
     konfirmasi = input("\nKonfirmasi pembelian? (y/n): ").lower()
     if konfirmasi == 'y':
+        for kursi in kursi_terpilih[:jumlah_tiket]:
+            update_status_kursi(id_studio, kursi['no_kursi'], 'terisi')
+
         simpan_riwayat_transaksi(
             username, 
             film_terpilih['Judul'], 
