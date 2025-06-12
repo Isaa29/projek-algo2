@@ -966,7 +966,7 @@ def pilih_kursi(id_studio):
         if nomor_kursi == '0':
             return None
         
-        kursi_dipilih = [k.strip().upper() for k in nomor_kursi.split(',')]  # Bersihkan input
+        kursi_dipilih = [k.strip().upper() for k in nomor_kursi.split(',')]
         
         file_kursi = f"kursi_{id_studio}.csv"
         with open(file_kursi, mode='r', newline='') as file:
