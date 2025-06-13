@@ -788,6 +788,8 @@ def rekomendasi_jadwal_tayang():
 
     print(f"\nTotal Waktu: {total_durasi} menit")
     print(f"Total Perkiraan Rating Tertimbang: {total_rating:.2f}")
+    input("\nTekan Enter untuk kembali...")
+
 
 def manajemen_studio():
     clear_terminal()
@@ -1078,7 +1080,8 @@ def beli_tiket(username):
         print("=== BELI TIKET ===")
         print("1. Cari Film")
         print("2. Tampilkan Semua Film")
-        print("3. Kembali ke Menu")
+        print("3. Tampilkan Jadwal Terdekat dan Termurah")
+        print("4. Kembali ke Menu")
 
         pilihan = input("Pilih opsi: ")
 
@@ -1093,6 +1096,12 @@ def beli_tiket(username):
                 proses_pembelian(username, film_terpilih)
                 break
         elif pilihan == '3':
+            film_terpilih, jadwal_terpilih = tampilkan_jadwal_terdekat_termurah()
+        if film_terpilih and jadwal_terpilih:
+                proses_pembelian_dengan_jadwal(username, film_terpilih, jadwal_terpilih)
+
+                break
+        elif pilihan == '4':
             return 
         else:
             print("Pilihan tidak valid. Silakan coba lagi.")
@@ -1168,6 +1177,87 @@ def tampilkan_dan_pilih_film():
 
     print("Pilihan tidak valid.")
     input("Tekan Enter untuk kembali...")
+
+def tampilkan_jadwal_terdekat_termurah():
+    clear_terminal()
+    header()
+    print("=== JADWAL TERDEKAT & TERMURAH ===")
+
+    waktu_input = input("Masukkan waktu sekarang (HH:MM): ").strip()
+    try:
+        waktu_user = datetime.strptime(waktu_input, "%H:%M")
+    except ValueError:
+        print("Format waktu tidak valid. Gunakan format HH:MM.")
+        input("Tekan Enter untuk kembali...")
+        return None, None
+
+    daftar_jadwal = muat_jadwal()
+    daftar_film = []
+    if os.path.exists(file_film):
+        with open(file_film, 'r', newline='') as file:
+            daftar_film = list(csv.DictReader(file))
+
+    film_dict = {f['ID Film']: f for f in daftar_film}
+
+    data_jadwal = []
+    for jadwal in daftar_jadwal:
+        try:
+            jam_mulai = datetime.strptime(jadwal['jam_mulai'], "%H:%M")
+            id_film = jadwal['id_film']
+            harga = int(film_dict.get(id_film, {}).get('Harga tiket', 999999))
+            selisih_menit = (jam_mulai - waktu_user).total_seconds() / 60
+            if selisih_menit >= 0:
+                data_jadwal.append({
+                    'id_film': id_film,
+                    'judul': film_dict.get(id_film, {}).get('Judul', 'Tidak diketahui'),
+                    'jam_mulai': jadwal['jam_mulai'],
+                    'jam_selesai': jadwal['jam_selesai'],
+                    'id_studio': jadwal['id_studio'],
+                    'harga': harga,
+                    'selisih': selisih_menit
+                })
+        except:
+            continue
+
+    # Insertion sort
+    for i in range(1, len(data_jadwal)):
+        key = data_jadwal[i]
+        j = i - 1
+        while j >= 0 and (
+            (data_jadwal[j]['selisih'] > key['selisih']) or
+            (data_jadwal[j]['selisih'] == key['selisih'] and data_jadwal[j]['harga'] > key['harga'])
+        ):
+            data_jadwal[j + 1] = data_jadwal[j]
+            j -= 1
+        data_jadwal[j + 1] = key
+
+    if not data_jadwal:
+        print("Tidak ada jadwal yang cocok dengan waktu saat ini.")
+        input("\nTekan Enter untuk kembali...")
+        return None, None
+
+    print("\nJadwal tayang terdekat dan termurah:")
+    for idx, jadwal in enumerate(data_jadwal, start=1):
+        print(f"{idx}.")
+        print(f"Judul   : {jadwal['judul']}")
+        print(f"Jadwal  : {jadwal['jam_mulai']} - {jadwal['jam_selesai']}")
+        print(f"Studio  : {jadwal['id_studio']}")
+        print(f"Harga   : Rp{jadwal['harga']}")
+        print()
+
+    pilihan = input("Pilih nomor film untuk beli (atau 0 untuk batal): ").strip()
+    if not pilihan.isdigit():
+        print("Input tidak valid.")
+        return None, None
+
+    pilihan = int(pilihan)
+    if pilihan == 0 or not (1 <= pilihan <= len(data_jadwal)):
+        return None, None
+
+    film_terpilih = film_dict.get(data_jadwal[pilihan - 1]['id_film'])
+    jadwal_terpilih = data_jadwal[pilihan - 1]
+
+    return film_terpilih, jadwal_terpilih
 
 
 def proses_pembelian(username, film_terpilih):
@@ -1248,6 +1338,62 @@ def proses_pembelian(username, film_terpilih):
     else:
         print("Pembelian dibatalkan.")
     
+    input("Tekan Enter untuk kembali...")
+
+def proses_pembelian_dengan_jadwal(username, film_terpilih, jadwal_dipilih):
+    clear_terminal()
+    print(f"=== PEMBELIAN TIKET: {film_terpilih['Judul']} ===")
+
+    id_studio = jadwal_dipilih['id_studio']
+
+    kursi_terpilih = pilih_kursi(id_studio)
+    if not kursi_terpilih:
+        print("Pembelian dibatalkan.")
+        input("Tekan Enter untuk kembali...")
+        return
+
+    while True:
+        try:
+            jumlah_tiket = int(input("Masukkan jumlah tiket: "))
+            if jumlah_tiket <= 0:
+                print("Jumlah tiket harus lebih dari 0.")
+                continue
+            if jumlah_tiket > len(kursi_terpilih):
+                print(f"Anda hanya memilih {len(kursi_terpilih)} kursi. Pilih jumlah tiket sesuai.")
+                continue
+            break
+        except ValueError:
+            print("Input harus berupa angka.")
+
+    harga_tiket = int(film_terpilih['Harga tiket'])
+    total_harga = jumlah_tiket * harga_tiket
+
+    print(f"\n=== KONFIRMASI PEMBELIAN ===")
+    print(f"Film: {film_terpilih['Judul']}")
+    print(f"Jadwal: {jadwal_dipilih['jam_mulai']} - {jadwal_dipilih['jam_selesai']}")
+    print(f"Studio: {id_studio}")
+    print(f"Jumlah tiket: {jumlah_tiket}")
+    print(f"Harga per tiket: Rp{harga_tiket}")
+    print(f"Total harga: Rp{total_harga}")
+    print(f"Kursi dipilih: {', '.join([k['no_kursi'] for k in kursi_terpilih[:jumlah_tiket]])}")
+
+    konfirmasi = input("\nKonfirmasi pembelian? (y/n): ").lower()
+    if konfirmasi == 'y':
+        for kursi in kursi_terpilih[:jumlah_tiket]:
+            update_status_kursi(id_studio, kursi['no_kursi'], 'terisi')
+
+        simpan_riwayat_transaksi(
+            username,
+            film_terpilih['Judul'],
+            jadwal_dipilih['jam_mulai'],
+            jadwal_dipilih['jam_selesai'],
+            jumlah_tiket,
+            harga_tiket
+        )
+        print("\nTiket berhasil dibeli! Terima kasih.")
+    else:
+        print("Pembelian dibatalkan.")
+
     input("Tekan Enter untuk kembali...")
 
 
