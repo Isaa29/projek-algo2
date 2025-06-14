@@ -260,7 +260,8 @@ def tambah_film():
     print(f"{'ID':<10} {'Judul':<30} {'Genre':<15} {'Durasi':<10} {'Harga':<10} {'Rating':<10}")
     print('-'*75)
     for row in rows:
-        print(f"{row['ID Film']:<10} {row['Judul']:<30} {row['Genre']:<15} {row['Durasi (menit)']:<10} Rp{row['Harga tiket']:<10} {'Rating':<10}")
+        rating_display = row.get('Rating', '') or '-'
+        print(f"{row['ID Film']:<10} {row['Judul']:<30} {row['Genre']:<15} {row['Durasi (menit)']:<10} Rp{row['Harga tiket']:<10} {rating_display:<10}")
 
     print('\nTekan Enter tanpa mengetik apa pun untuk kembali ke menu.')
 
@@ -302,6 +303,17 @@ def tambah_film():
         if harga.isdigit():
             break
         print('Harga harus berupa angka.')
+
+    while True:
+        rating = input('Rating film (contoh: 8.5): ').strip()
+        if not rating:
+            print("Kembali ke menu...")
+            return
+        try:
+            float(rating)
+            break
+        except ValueError:
+            print('Rating harus berupa angka (contoh: 8.5).')
 
     with open(file_film, 'a', newline='') as file:
         writer = csv.writer(file)
@@ -1436,57 +1448,58 @@ def lihat_riwayat_transaksi(username):
               f"Jumlah: {row['jumlah_tiket']} | Total: Rp{row['total_harga']} | Waktu: {row['waktu_pesan']}")
 
 def beri_rating_film(username):
-    print("=== Beri Rating Film ===")
-
-    if not os.path.exists(file_film):
+    try:
+        with open(file_film, 'r', newline='') as file:
+            reader = csv.DictReader(file)
+            film_list = list(reader)
+    except FileNotFoundError:
         print("Data film tidak ditemukan.")
         return
-
-    with open(file_film, 'r', newline='') as file:
-        reader = csv.DictReader(file)
-        film_list = list(reader)
 
     if not film_list:
         print("Belum ada film yang tersedia.")
         return
 
-    print("\nDaftar Film:")
-    for i, film in enumerate(film_list, start=1):
-        rating = film.get('Rating', '')
-        print(f"{i} - {film['Judul']} (Rating: {rating})")
+    print("\n=== DAFTAR FILM ===")
+    for i, film in enumerate(film_list, 1):
+        rating_display = film.get('Rating', '') or 'Belum ada rating'
+        print(f"{i}. {film.get('Judul', 'Tidak ada judul')} - Rating: {rating_display}")
 
     try:
-        film_index = int(input("Masukkan ID Film yang ingin kamu beri rating: ")) - 1
-        if not 0 <= film_index < len(film_list):
-            print("ID Film tidak valid.")
-            return
-
-        rating = float(input("Masukkan rating (1.0 - 5.0): "))
-        if not (1.0 <= rating <= 5.0):
-            print("Rating harus antara 1.0 hingga 5.0.")
+        pilihan = int(input("\nPilih nomor film yang ingin diberi rating: ")) - 1
+        if pilihan < 0 or pilihan >= len(film_list):
+            print("Pilihan tidak valid.")
             return
     except ValueError:
         print("Input tidak valid.")
         return
 
-    film = film_list[film_index]
-    rating_lama = float(film.get('Rating', 0.0) or 0.0)
-    jumlah_rating_str = film.get('Jumlah Rating', '0')
-    jumlah_rating = int(jumlah_rating_str) if jumlah_rating_str.strip().isdigit() else 0
+    try:
+        rating_baru = float(input("Masukkan rating (0-10): "))
+        if rating_baru < 0 or rating_baru > 10:
+            print("Rating harus antara 0-10.")
+            return
+    except ValueError:
+        print("Rating harus berupa angka.")
+        return
 
-    jumlah_rating += 1
-    rating_baru = (rating_lama * (jumlah_rating - 1) + rating) / jumlah_rating
+    film_list[pilihan]['Rating'] = str(rating_baru)
 
-    film['Rating'] = f"{rating_baru:.2f}"
-    film['Jumlah Rating'] = str(jumlah_rating)
+    fieldnames = ['ID Film', 'Judul', 'Genre', 'Durasi (menit)', 'Harga tiket', 'Rating']
+    
+    for film in film_list:
+        clean_film = {key: film.get(key, '') for key in fieldnames}
+        film.clear()
+        film.update(clean_film)
 
-    with open(file_film, 'w', newline='') as file:
-        fieldnames = film_list[0].keys()
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(film_list)
-
-    print(f"Terima kasih! Rating untuk film '{film['Judul']}' berhasil disimpan.")
+    try:
+        with open(file_film, 'w', newline='') as file:
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(film_list)
+        print("Rating berhasil ditambahkan!")
+    except Exception as e:
+        print(f"Error saat menyimpan: {e}")
 
 
 inisialisasi_file()
