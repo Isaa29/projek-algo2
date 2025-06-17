@@ -496,7 +496,8 @@ def manajemen_jadwal():
         print("3. Edit Jadwal")
         print("4. Hapus Jadwal")
         print("5. Rekomendasi Jadwal")
-        print("6. Kembali")
+        print("6. Lihat Kursi per Jadwal")
+        print("7. Kembali")
 
         pilihan = input("Pilih menu: ")
         if pilihan == "1":
@@ -510,6 +511,8 @@ def manajemen_jadwal():
         elif pilihan == "5":
             rekomendasi_jadwal_tayang()
         elif pilihan == "6":
+            pilih_dan_tampilkan_kursi()
+        elif pilihan == "7":
             break
         else:
             print("Pilihan tidak valid.")
@@ -525,6 +528,7 @@ def muat_jadwal():
             try:
                 durasi = int(baris.get('durasi', 0))
                 daftar_jadwal.append({
+                    "id_jadwal": baris.get("id_jadwal", ""),
                     "id_film": baris.get("id_film", ""),
                     "durasi": durasi,
                     "jam_mulai": baris.get("jam_mulai", ""),
@@ -537,7 +541,7 @@ def muat_jadwal():
 
 def simpan_jadwal(daftar_jadwal):
     with open(file_jadwal, mode="w", newline="") as file:
-        penulis = csv.DictWriter(file, fieldnames=["id_film", "durasi", "jam_mulai", "jam_selesai", "id_studio"])
+        penulis = csv.DictWriter(file, fieldnames=["id_jadwal", "id_film", "durasi", "jam_mulai", "jam_selesai", "id_studio"])
         penulis.writeheader()
         penulis.writerows(daftar_jadwal)
 
@@ -571,7 +575,7 @@ def tambah_jadwal():
 
     print("\n=== Daftar Studio ===")
     for studio in daftar_studio:
-        print(f"{studio['id_studio']} - {studio['nama_studio']}")
+        print(f"{studio['id_studio']} - {studio['nama_studio']} (kapasitas: {studio['kapasitas']})")
 
     id_film = input("Masukkan ID Film: ")
     film = next((f for f in daftar_film if f["id_film"] == id_film), None)
@@ -587,7 +591,14 @@ def tambah_jadwal():
         input("Tekan Enter untuk kembali...")
         return
 
+    kapasitas = int(studio["kapasitas"])
+
+    # Buat ID jadwal unik
     semua_jadwal = muat_jadwal()
+    next_id = len(semua_jadwal) + 1
+    id_jadwal = f"J{next_id:03}"
+
+    # Hitung jam mulai dan selesai otomatis
     jam_mulai = datetime.strptime("10:00", "%H:%M")
     for jadwal in semua_jadwal:
         if jadwal["id_studio"] == id_studio:
@@ -601,7 +612,9 @@ def tambah_jadwal():
     jam_mulai_fmt = jam_mulai.strftime("%H:%M")
     jam_selesai_fmt = jam_selesai.strftime("%H:%M")
 
+    # Tambahkan jadwal ke list
     semua_jadwal.append({
+        "id_jadwal": id_jadwal,
         "id_film": film["id_film"],
         "durasi": durasi,
         "jam_mulai": jam_mulai_fmt,
@@ -609,9 +622,24 @@ def tambah_jadwal():
         "id_studio": id_studio
     })
 
+    # Simpan jadwal
     simpan_jadwal(semua_jadwal)
-    print("Jadwal berhasil ditambahkan otomatis.")
+
+    # Buat file kursi berdasarkan kapasitas studio
+    buat_file_kursi(id_jadwal, kapasitas)
+
+    print(f"Jadwal berhasil ditambahkan dengan ID {id_jadwal}.")
+    print(f"File kursi_{id_jadwal}.csv berhasil dibuat dengan {kapasitas} kursi.")
     input("Tekan Enter untuk kembali...")
+
+
+def buat_file_kursi(id_jadwal, kapasitas):
+    file_kursi = f"kursi_{id_jadwal}.csv"
+    with open(file_kursi, mode='w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=['no_kursi', 'status'])
+        writer.writeheader()
+        for i in range(1, int(kapasitas) + 1):
+            writer.writerow({'no_kursi': f"K{i}", 'status': 'kosong'})
 
 def lihat_jadwal():
     clear_terminal()
@@ -653,12 +681,25 @@ def hapus_jadwal():
 
     print("\n=== Hapus Jadwal ===")
     for i, jadwal in enumerate(daftar_jadwal, start=1):
-        print(f"{i}. Film ID: {jadwal['id_film']} | Jam Mulai: {jadwal['jam_mulai']} | Studio: {jadwal['id_studio']}")
+        print(f"{i}. ID Jadwal: {jadwal['id_jadwal']} | Film ID: {jadwal['id_film']} | Jam Mulai: {jadwal['jam_mulai']} | Studio: {jadwal['id_studio']}")
 
     try:
         pilihan = int(input("Pilih nomor jadwal yang ingin dihapus: "))
         if 1 <= pilihan <= len(daftar_jadwal):
             jadwal_terhapus = daftar_jadwal.pop(pilihan - 1)
+
+            # Ambil ID jadwal untuk menghapus file kursi
+            id_jadwal = jadwal_terhapus.get("id_jadwal", "")
+            file_kursi = f"kursi_{id_jadwal}.csv"
+
+            # Hapus file kursi jika ada
+            if os.path.exists(file_kursi):
+                os.remove(file_kursi)
+                print(f"File {file_kursi} berhasil dihapus.")
+            else:
+                print(f"File {file_kursi} tidak ditemukan.")
+
+            # Simpan kembali jadwal yang tersisa
             simpan_jadwal(daftar_jadwal)
             print("Jadwal berhasil dihapus.")
         else:
@@ -666,6 +707,7 @@ def hapus_jadwal():
     except ValueError:
         print("Input tidak valid.")
     input("Tekan Enter untuk kembali...")
+
 
 def edit_jadwal():
     daftar_jadwal = muat_jadwal()
@@ -802,6 +844,63 @@ def rekomendasi_jadwal_tayang():
     print(f"Total Perkiraan Rating Tertimbang: {total_rating:.2f}")
     input("\nTekan Enter untuk kembali...")
 
+def pilih_dan_tampilkan_kursi():
+    clear_terminal()
+    header()
+
+    daftar_jadwal = muat_jadwal()
+    if not daftar_jadwal:
+        print("Belum ada jadwal tayang.")
+        input("Tekan Enter untuk kembali...")
+        return
+
+    print("\n=== Pilih Jadwal untuk Melihat Kursi ===")
+    for i, jadwal in enumerate(daftar_jadwal, start=1):
+        print(f"{i}. ID Jadwal: {jadwal['id_jadwal']} | Film ID: {jadwal['id_film']} | Jam: {jadwal['jam_mulai']} - {jadwal['jam_selesai']} | Studio: {jadwal['id_studio']}")
+
+    try:
+        pilihan = int(input("Pilih nomor jadwal: "))
+        if 1 <= pilihan <= len(daftar_jadwal):
+            id_jadwal = daftar_jadwal[pilihan - 1]["id_jadwal"]
+            tampilkan_kursi(id_jadwal)
+        else:
+            print("Pilihan tidak valid.")
+            input("Tekan Enter untuk kembali...") 
+    except ValueError:
+        print("Input tidak valid.")
+        input("Tekan Enter untuk kembali...")
+
+
+def tampilkan_kursi(id_jadwal): 
+    clear_terminal()
+    header()
+    print(f"=== TAMPILAN KURSI UNTUK JADWAL {id_jadwal} ===")
+
+    file_kursi = f"kursi_{id_jadwal}.csv"
+    if not os.path.exists(file_kursi):
+        print(f"Data kursi untuk jadwal {id_jadwal} tidak ditemukan.")
+        input("\nTekan Enter untuk kembali...")
+        return
+
+    with open(file_kursi, mode='r', newline='') as file:
+        reader = csv.DictReader(file)
+        kursi_list = list(reader)
+
+    if not kursi_list:
+        print("Belum ada data kursi.")
+        input("\nTekan Enter untuk kembali...")
+        return
+
+    jumlah_per_baris = 5
+    for i, kursi in enumerate(kursi_list, start=1):
+        status = kursi['status']
+        simbol = '[X]' if status == 'terisi' else '[ ]'
+        print(f"{simbol} {kursi['no_kursi']}", end='\t')
+        if i % jumlah_per_baris == 0:
+            print()
+    print("\nKeterangan: [ ] = Kosong, [X] = Terisi\n")
+    input("Tekan Enter untuk kembali...")
+
 
 def manajemen_studio():
     clear_terminal()
@@ -811,8 +910,7 @@ def manajemen_studio():
         print('1. Lihat Daftar Studio')
         print('2. Tambah Studio Baru')
         print('3. Hapus Studio')
-        print('4. Tampilkan kursi studio')
-        print('5. Kembali')
+        print('4. Kembali')
 
         pilihan = input('Pilih menu: ')
         if pilihan == '1':
@@ -822,9 +920,6 @@ def manajemen_studio():
         elif pilihan == '3':
             hapus_studio()
         elif pilihan == '4':
-            id_studio = input("Masukkan ID Studio yang ingin dilihat kursinya: ").strip()
-            tampilkan_kursi(id_studio)
-        elif pilihan == '5':
             return
         else:
             print('Pilihan tidak valid.\n')
@@ -887,15 +982,8 @@ def tambah_studio():
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writerow({'id_studio': id_studio, 'nama_studio': nama_studio, 'kapasitas': kapasitas})
     
-    file_kursi = f"kursi_{id_studio}.csv"
-    with open(file_kursi, mode='w', newline='') as file:
-        fieldnames = ['no_kursi', 'status']
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        for i in range(1, int(kapasitas) + 1):
-            writer.writerow({'no_kursi': f"K{i}", 'status': 'kosong'})
 
-    print("Studio dan kursi berhasil ditambahkan.")
+    print("Studio berhasil ditambahkan.")
     input("Tekan Enter untuk kembali...")
 
 def hapus_studio():
@@ -940,99 +1028,6 @@ def hapus_studio():
         print("ID Studio tidak ditemukan.")
 
     input("Tekan Enter untuk kembali...")
-
-def tampilkan_kursi(id_studio):
-    clear_terminal()
-    header()
-    print(f"=== TAMPILAN KURSI STUDIO {id_studio} ===")
-
-    file_kursi = f"kursi_{id_studio}.csv"
-    if not os.path.exists(file_kursi):
-        print("Data kursi tidak ditemukan.")
-        input("\nTekan Enter untuk kembali...")
-        return
-
-    with open(file_kursi, mode='r', newline='' ) as file:
-        reader = csv.DictReader(file)
-        kursi_list = list(reader)
-    
-    if not kursi_list:
-        print("Belum ada data kursi.")
-        input("\nTekan Enter untuk kembali...")
-        return
-
-    jumlah_per_baris = 5
-    for i, kursi in enumerate(kursi_list, start=1):
-        status = kursi['status']
-        simbol = '[X]' if status == 'terisi' else '[ ]'
-        print(f"{simbol} {kursi['no_kursi']}", end='\t')
-        if i % jumlah_per_baris == 0:
-            print()
-    print("\nKeterangan: [ ] = Kosong, [X] = Terisi\n")
-    input("Tekan Enter untuk kembali...")
-
-def pilih_kursi(id_studio):
-    while True:
-        tampilkan_kursi(id_studio)
-        print("=== PILIH KURSI ===")
-        nomor_kursi = input("Masukkan nomor kursi yang ingin dipilih (pisahkan dengan koma jika lebih dari satu, atau 0 untuk batal): ")
-        
-        if nomor_kursi == '0':
-            return None
-        
-        kursi_dipilih = [k.strip().upper() for k in nomor_kursi.split(',')]
-        
-        file_kursi = f"kursi_{id_studio}.csv"
-        with open(file_kursi, mode='r', newline='') as file:
-            reader = csv.DictReader(file)
-            kursi_list = list(reader)
-        
-        kursi_tersedia = []
-        kursi_tidak_valid = []
-        kursi_sudah_terisi = []
-        
-        for nomor in kursi_dipilih:
-            kursi = next((k for k in kursi_list if k['no_kursi'] == nomor), None)
-            if not kursi:
-                kursi_tidak_valid.append(nomor)
-            elif kursi['status'] == 'terisi':
-                kursi_sudah_terisi.append(nomor)
-            else:
-                kursi_tersedia.append(kursi)
-        
-        if kursi_tidak_valid:
-            print(f"Kursi dengan nomor {', '.join(kursi_tidak_valid)} tidak valid.")
-        if kursi_sudah_terisi:
-            print(f"Kursi dengan nomor {', '.join(kursi_sudah_terisi)} sudah terisi.")
-        
-        if kursi_tidak_valid or kursi_sudah_terisi:
-            input("Tekan Enter untuk mencoba lagi...")
-            continue
-        
-        if not kursi_tersedia:
-            print("Tidak ada kursi yang dipilih.")
-            input("Tekan Enter untuk mencoba lagi...")
-            continue
-        
-        return kursi_tersedia
-
-def update_status_kursi(id_studio, no_kursi, status):
-    file_kursi = f"kursi_{id_studio}.csv"
-    
-    with open(file_kursi, mode='r', newline='') as file:
-        reader = csv.DictReader(file)
-        kursi_list = list(reader)
-    
-    for kursi in kursi_list:
-        if kursi['no_kursi'] == no_kursi:
-            kursi['status'] = status
-            break
-            
-    with open(file_kursi, mode='w', newline='') as file:
-        fieldnames = kursi_list[0].keys()
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(kursi_list)
 
 def riwayat_transaksi():
     clear_terminal()
@@ -1085,6 +1080,73 @@ def menu_pengguna(username):
             return main()
         else:
             print('Pilihan tidak valid. Silakan pilih lagi.')
+
+def pilih_kursi(id_jadwal):
+    while True:
+        tampilkan_kursi(id_jadwal)
+        print("=== PILIH KURSI ===")
+        nomor_kursi = input("Masukkan nomor kursi yang ingin dipilih (pisahkan dengan koma jika lebih dari satu, atau 0 untuk batal): ")
+
+        if nomor_kursi == '0':
+            return None
+
+        kursi_dipilih = [k.strip().upper() for k in nomor_kursi.split(',')]
+        file_kursi = f"kursi_{id_jadwal}.csv"
+
+        with open(file_kursi, mode='r', newline='') as file:
+            reader = csv.DictReader(file)
+            kursi_list = list(reader)
+
+        kursi_tersedia = []
+        kursi_tidak_valid = []
+        kursi_sudah_terisi = []
+
+        for nomor in kursi_dipilih:
+            kursi = next((k for k in kursi_list if k['no_kursi'] == nomor), None)
+            if not kursi:
+                kursi_tidak_valid.append(nomor)
+            elif kursi['status'] == 'terisi':
+                kursi_sudah_terisi.append(nomor)
+            else:
+                kursi_tersedia.append(kursi)
+
+        if kursi_tidak_valid:
+            print(f"Kursi {', '.join(kursi_tidak_valid)} tidak valid.")
+        if kursi_sudah_terisi:
+            print(f"Kursi {', '.join(kursi_sudah_terisi)} sudah terisi.")
+
+        if kursi_tidak_valid or kursi_sudah_terisi:
+            input("Tekan Enter untuk mencoba lagi...")
+            continue
+
+        if not kursi_tersedia:
+            print("Tidak ada kursi yang dipilih.")
+            input("Tekan Enter untuk mencoba lagi...")
+            continue
+
+        return kursi_tersedia
+
+
+def update_status_kursi(id_jadwal, no_kursi, status):
+    file_kursi = f"kursi_{id_jadwal}.csv"
+
+    if not os.path.exists(file_kursi):
+        print("File kursi tidak ditemukan.")
+        return
+
+    with open(file_kursi, mode='r', newline='') as file:
+        reader = csv.DictReader(file)
+        kursi_list = list(reader)
+
+    for kursi in kursi_list:
+        if kursi['no_kursi'] == no_kursi:
+            kursi['status'] = status
+            break
+
+    with open(file_kursi, mode='w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=['no_kursi', 'status'])
+        writer.writeheader()
+        writer.writerows(kursi_list)
 
 def beli_tiket(username):
     while True:
