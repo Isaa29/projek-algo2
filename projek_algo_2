@@ -584,12 +584,10 @@ def tambah_jadwal():
 
     kapasitas = int(studio["kapasitas"])
 
-    # Buat ID jadwal unik
     semua_jadwal = muat_jadwal()
     next_id = len(semua_jadwal) + 1
     id_jadwal = f"J{next_id:03}"
 
-    # Hitung jam mulai dan selesai otomatis
     jam_mulai = datetime.strptime("10:00", "%H:%M")
     for jadwal in semua_jadwal:
         if jadwal["id_studio"] == id_studio:
@@ -603,7 +601,6 @@ def tambah_jadwal():
     jam_mulai_fmt = jam_mulai.strftime("%H:%M")
     jam_selesai_fmt = jam_selesai.strftime("%H:%M")
 
-    # Tambahkan jadwal ke list
     semua_jadwal.append({
         "id_jadwal": id_jadwal,
         "id_film": film["id_film"],
@@ -613,10 +610,7 @@ def tambah_jadwal():
         "id_studio": id_studio
     })
 
-    # Simpan jadwal
     simpan_jadwal(semua_jadwal)
-
-    # Buat file kursi berdasarkan kapasitas studio
     buat_file_kursi(id_jadwal, kapasitas)
 
     print(f"Jadwal berhasil ditambahkan dengan ID {id_jadwal}.")
@@ -1068,50 +1062,32 @@ def menu_pengguna(username):
         else:
             print('Pilihan tidak valid. Silakan pilih lagi.')
 
-def pilih_kursi(id_jadwal):
+def pilih_kursi(id_jadwal, seat_number=1):
     while True:
-        tampilkan_kursi(id_jadwal)
-        print("=== PILIH KURSI ===")
-        nomor_kursi = input("Masukkan nomor kursi yang ingin dipilih (pisahkan dengan koma jika lebih dari satu, atau 0 untuk batal): ")
-
+        tampilkan_kursi(id_jadwal)  # Show seats layout
+        
+        print(f"=== PILIH KURSI untuk tiket ke-{seat_number} ===")
+        nomor_kursi = input(f"Masukkan nomor kursi untuk tiket ke-{seat_number} (atau 0 untuk batal): ").strip()
         if nomor_kursi == '0':
             return None
-
-        kursi_dipilih = [k.strip().upper() for k in nomor_kursi.split(',')]
+        nomor_kursi = nomor_kursi.upper()
         file_kursi = f"kursi_{id_jadwal}.csv"
-
+        if not os.path.exists(file_kursi):
+            print("File kursi tidak ditemukan.")
+            return None
         with open(file_kursi, mode='r', newline='') as file:
             reader = csv.DictReader(file)
             kursi_list = list(reader)
-
-        kursi_tersedia = []
-        kursi_tidak_valid = []
-        kursi_sudah_terisi = []
-
-        for nomor in kursi_dipilih:
-            kursi = next((k for k in kursi_list if k['no_kursi'] == nomor), None)
-            if not kursi:
-                kursi_tidak_valid.append(nomor)
-            elif kursi['status'] == 'terisi':
-                kursi_sudah_terisi.append(nomor)
-            else:
-                kursi_tersedia.append(kursi)
-
-        if kursi_tidak_valid:
-            print(f"Kursi {', '.join(kursi_tidak_valid)} tidak valid.")
-        if kursi_sudah_terisi:
-            print(f"Kursi {', '.join(kursi_sudah_terisi)} sudah terisi.")
-
-        if kursi_tidak_valid or kursi_sudah_terisi:
+        kursi = next((k for k in kursi_list if k['no_kursi'] == nomor_kursi), None)
+        if not kursi:
+            print(f"Kursi {nomor_kursi} tidak valid.")
             input("Tekan Enter untuk mencoba lagi...")
             continue
-
-        if not kursi_tersedia:
-            print("Tidak ada kursi yang dipilih.")
-            input("Tekan Enter untuk mencoba lagi...")
+        if kursi['status'] == 'terisi':
+            print(f"Kursi {nomor_kursi} sudah terisi.")
+            input("Tekan Enter untuk coba lagi...")
             continue
-
-        return kursi_tersedia
+        return kursi
 
 
 def update_status_kursi(id_jadwal, no_kursi, status):
@@ -1337,7 +1313,7 @@ def proses_pembelian(username, film_terpilih):
     for idx, jadwal in enumerate(jadwal_film, start=1):
         print(f"{idx}. {jadwal['jam_mulai']} - {jadwal['jam_selesai']} | Studio: {jadwal['id_studio']}")
     
-    pilihan_jadwal = input("Pilih nomor jadwal (atau 0 untuk batal): ")
+    pilihan_jadwal = input("Pilih nomor jadwal (atau 0 untuk batal): ").strip()
     if not pilihan_jadwal.isdigit() or int(pilihan_jadwal) == 0:
         return
     
@@ -1350,29 +1326,32 @@ def proses_pembelian(username, film_terpilih):
     jadwal_dipilih = jadwal_film[pilihan_jadwal - 1]
     id_jadwal = jadwal_dipilih['id_jadwal']
     id_studio = jadwal_dipilih['id_studio']
-
-    kursi_terpilih = pilih_kursi(id_jadwal)  # PERBAIKAN DI SINI
-    if not kursi_terpilih:
-        print("Pembelian dibatalkan.")
-        input("Tekan Enter untuk kembali...")
-        return
-
     while True:
         try:
-            jumlah_tiket = int(input("Masukkan jumlah tiket: "))
+            jumlah_tiket = int(input("Masukkan jumlah tiket yang ingin dibeli: "))
             if jumlah_tiket <= 0:
                 print("Jumlah tiket harus lebih dari 0.")
-                continue
-            if jumlah_tiket > len(kursi_terpilih):
-                print(f"Anda hanya memilih {len(kursi_terpilih)} kursi. Pilih jumlah tiket sesuai atau kurang dari jumlah kursi.")
                 continue
             break
         except ValueError:
             print("Input harus berupa angka.")
-    
+    kursi_terpilih = []
+    print(f"\nSilakan pilih kursi satu per satu untuk {jumlah_tiket} tiket.")
+
+    for i in range(1, jumlah_tiket + 1):
+        kursi = pilih_kursi(id_jadwal, seat_number=i)
+        if kursi is None:
+            print("Proses pembelian dibatalkan saat memilih kursi.")
+            input("Tekan Enter untuk kembali...")
+            return
+
+        if any(k['no_kursi'] == kursi['no_kursi'] for k in kursi_terpilih):
+            print(f"Kursi {kursi['no_kursi']} sudah Anda pilih sebelumnya, silakan pilih kursi lain.")
+            i -= 1 
+            continue
+        kursi_terpilih.append(kursi)
     harga_tiket = int(film_terpilih['Harga'])
     total_harga = jumlah_tiket * harga_tiket
-
     print(f"\n=== KONFIRMASI PEMBELIAN ===")
     print(f"Film: {film_terpilih['Judul']}")
     print(f"Jadwal: {jadwal_dipilih['jam_mulai']} - {jadwal_dipilih['jam_selesai']}")
@@ -1380,13 +1359,12 @@ def proses_pembelian(username, film_terpilih):
     print(f"Jumlah tiket: {jumlah_tiket}")
     print(f"Harga per tiket: Rp{harga_tiket}")
     print(f"Total harga: Rp{total_harga}")
-    print(f"Kursi dipilih: {', '.join([k['no_kursi'] for k in kursi_terpilih[:jumlah_tiket]])}")
+    print(f"Kursi dipilih: {', '.join([k['no_kursi'] for k in kursi_terpilih])}")
     
     konfirmasi = input("\nKonfirmasi pembelian? (y/n): ").lower()
     if konfirmasi == 'y':
-        for kursi in kursi_terpilih[:jumlah_tiket]:
-            update_status_kursi(id_jadwal, kursi['no_kursi'], 'terisi')  # PERBAIKAN DI SINI
-
+        for kursi in kursi_terpilih:
+            update_status_kursi(id_jadwal, kursi['no_kursi'], 'terisi')
         simpan_riwayat_transaksi(
             username, 
             film_terpilih['Judul'], 
@@ -1406,32 +1384,34 @@ def proses_pembelian(username, film_terpilih):
 def proses_pembelian_dengan_jadwal(username, film_terpilih, jadwal_dipilih):
     clear_terminal()
     print(f"=== PEMBELIAN TIKET: {film_terpilih['Judul']} ===")
-
     id_jadwal = jadwal_dipilih['id_jadwal']
     id_studio = jadwal_dipilih['id_studio']
 
-    kursi_terpilih = pilih_kursi(id_jadwal)  # PERBAIKAN DI SINI
-    if not kursi_terpilih:
-        print("Pembelian dibatalkan.")
-        input("Tekan Enter untuk kembali...")
-        return
-
     while True:
         try:
-            jumlah_tiket = int(input("Masukkan jumlah tiket: "))
+            jumlah_tiket = int(input("Masukkan jumlah tiket yang ingin dibeli: "))
             if jumlah_tiket <= 0:
                 print("Jumlah tiket harus lebih dari 0.")
-                continue
-            if jumlah_tiket > len(kursi_terpilih):
-                print(f"Anda hanya memilih {len(kursi_terpilih)} kursi. Pilih jumlah tiket sesuai.")
                 continue
             break
         except ValueError:
             print("Input harus berupa angka.")
+    kursi_terpilih = []
+    print(f"\nSilakan pilih kursi satu per satu untuk {jumlah_tiket} tiket.")
 
+    for i in range(1, jumlah_tiket + 1):
+        kursi = pilih_kursi(id_jadwal, seat_number=i)
+        if kursi is None:
+            print("Proses pembelian dibatalkan saat memilih kursi.")
+            input("Tekan Enter untuk kembali...")
+            return
+        if any(k['no_kursi'] == kursi['no_kursi'] for k in kursi_terpilih):
+            print(f"Kursi {kursi['no_kursi']} sudah dipilih sebelumnya, pilih kursi lain.")
+            i -= 1
+            continue
+        kursi_terpilih.append(kursi)
     harga_tiket = int(film_terpilih['Harga'])
     total_harga = jumlah_tiket * harga_tiket
-
     print(f"\n=== KONFIRMASI PEMBELIAN ===")
     print(f"Film: {film_terpilih['Judul']}")
     print(f"Jadwal: {jadwal_dipilih['jam_mulai']} - {jadwal_dipilih['jam_selesai']}")
@@ -1439,13 +1419,11 @@ def proses_pembelian_dengan_jadwal(username, film_terpilih, jadwal_dipilih):
     print(f"Jumlah tiket: {jumlah_tiket}")
     print(f"Harga per tiket: Rp{harga_tiket}")
     print(f"Total harga: Rp{total_harga}")
-    print(f"Kursi dipilih: {', '.join([k['no_kursi'] for k in kursi_terpilih[:jumlah_tiket]])}")
-
+    print(f"Kursi dipilih: {', '.join([k['no_kursi'] for k in kursi_terpilih])}")
     konfirmasi = input("\nKonfirmasi pembelian? (y/n): ").lower()
     if konfirmasi == 'y':
-        for kursi in kursi_terpilih[:jumlah_tiket]:
-            update_status_kursi(id_jadwal, kursi['no_kursi'], 'terisi')  # PERBAIKAN DI SINI
-
+        for kursi in kursi_terpilih:
+            update_status_kursi(id_jadwal, kursi['no_kursi'], 'terisi')
         simpan_riwayat_transaksi(
             username,
             film_terpilih['Judul'],
@@ -1457,7 +1435,6 @@ def proses_pembelian_dengan_jadwal(username, film_terpilih, jadwal_dipilih):
         print("\nTiket berhasil dibeli! Terima kasih.")
     else:
         print("Pembelian dibatalkan.")
-
     input("Tekan Enter untuk kembali...")
 
 def simpan_riwayat_transaksi(username, nama_film, jam_mulai, jam_selesai, jumlah_tiket, harga_tiket):
