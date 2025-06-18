@@ -469,7 +469,7 @@ def muat_data_film():
         for baris in reader:
             try:
                 daftar_film.append({
-                    "id_film": baris.get("ID Film", ""),
+                    "id_film": baris.get("id_film", ""),
                     "nama_film": baris.get("Judul", ""),
                     "durasi": int(baris.get("Durasi (menit)", 0)),
                 })
@@ -653,14 +653,24 @@ def lihat_jadwal():
         studio_dict = {row['id_studio']: row['nama_studio'] for row in reader}
 
     daftar_film = muat_data_film()
-    film_dict = {film['id_film']: film['nama_film'] for film in daftar_film}
+    film_dict = {film['id_film']: film['nama_film'] for film in daftar_film}  # Disesuaikan dengan header CSV kamu
 
-    print("\n=== Jadwal Tayang Film ===")
+    print("\n=== Jadwal Tayang Film ===\n")
+
     for jadwal in daftar_jadwal:
         nama_studio = studio_dict.get(jadwal['id_studio'], "Studio tidak diketahui")
         nama_film = film_dict.get(jadwal['id_film'], "Film tidak diketahui")
-        print(f"{nama_film} | Durasi: {jadwal['durasi']} menit | Mulai: {jadwal['jam_mulai']} | "
-              f"Selesai: {jadwal['jam_selesai']} | Studio: {nama_studio}")
+        durasi = jadwal.get('durasi', '-')
+        jam_mulai = jadwal.get('jam_mulai', '-')
+        jam_selesai = jadwal.get('jam_selesai', '-')
+
+        print("+" + "-"*50 + "+")
+        print(f"| Judul      : {nama_film:<34} |")
+        print(f"| Durasi     : {durasi:<28} menit |")
+        print(f"| Jam Mulai  : {jam_mulai:<34} |")
+        print(f"| Jam Selesai: {jam_selesai:<34} |")
+        print(f"| Studio     : {nama_studio:<34} |")
+        print("+" + "-"*50 + "+")
 
     input("\nTekan Enter untuk kembali...")
 
