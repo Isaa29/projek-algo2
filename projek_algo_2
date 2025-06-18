@@ -411,7 +411,6 @@ def edit_data_film():
                 print(f'Genre: {row[2]}')
                 print(f'Durasi: {row[3]}')
                 print(f'Harga: {row[4]}')
-                print(f'Rating: {row[5]}')
                 print('1. Edit Judul')
                 print('2. Edit Genre')
                 print('3. Edit Durasi')
@@ -909,32 +908,25 @@ def manajemen_studio():
     header()
     while True:
         print('\n=== MANAJEMEN STUDIO ===')
-        print('1. Lihat Daftar Studio')
-        print('2. Tambah Studio Baru')
-        print('3. Hapus Studio')
-        print('4. Kembali')
+        print('1. Tambah Studio Baru')
+        print('2. Hapus Studio')
+        print('3. Kembali')
 
         pilihan = input('Pilih menu: ')
         if pilihan == '1':
-            lihat_studio()
-        elif pilihan == '2':
             tambah_studio()
-        elif pilihan == '3':
+        elif pilihan == '2':
             hapus_studio()
-        elif pilihan == '4':
+        elif pilihan == '3':
             return
         else:
             print('Pilihan tidak valid.\n')
 
-def lihat_studio():
+def tambah_studio():
     clear_terminal()
     header()
     print("=== DAFTAR STUDIO ===")
-    if not os.path.exists(file_studio):
-        print("Belum ada data studio.")
-        input("\nTekan Enter untuk kembali...")
-        return
-    with open(file_studio, mode='r', newline='' ) as file:
+    with open(file_studio, mode='r', newline='') as file:
         reader = csv.DictReader(file)
         studios = list(reader)
         if not studios:
@@ -942,10 +934,7 @@ def lihat_studio():
         else:
             for studio in studios:
                 print(f"ID Studio: {studio['id_studio']}, Nama: {studio['nama_studio']}, Kapasitas: {studio['kapasitas']}")
-
-def tambah_studio():
-    clear_terminal()
-    header()
+    
     print("=== TAMBAH STUDIO BARU ===")
     id_studio = input("Masukkan ID Studio (Enter untuk kembali): ").strip()
     if not id_studio:
@@ -1021,11 +1010,7 @@ def hapus_studio():
             writer.writeheader()
             writer.writerows(data_baru)
 
-        file_kursi = f"kursi_{id_studio}.csv"
-        if os.path.exists(file_kursi):
-            os.remove(file_kursi)
-
-        print("Studio dan kursi berhasil dihapus.")
+        print("Studio berhasil dihapus.")
     else:
         print("ID Studio tidak ditemukan.")
 
@@ -1363,9 +1348,10 @@ def proses_pembelian(username, film_terpilih):
         return
     
     jadwal_dipilih = jadwal_film[pilihan_jadwal - 1]
+    id_jadwal = jadwal_dipilih['id_jadwal']
     id_studio = jadwal_dipilih['id_studio']
 
-    kursi_terpilih = pilih_kursi(id_studio)
+    kursi_terpilih = pilih_kursi(id_jadwal)  # PERBAIKAN DI SINI
     if not kursi_terpilih:
         print("Pembelian dibatalkan.")
         input("Tekan Enter untuk kembali...")
@@ -1399,7 +1385,7 @@ def proses_pembelian(username, film_terpilih):
     konfirmasi = input("\nKonfirmasi pembelian? (y/n): ").lower()
     if konfirmasi == 'y':
         for kursi in kursi_terpilih[:jumlah_tiket]:
-            update_status_kursi(id_studio, kursi['no_kursi'], 'terisi')
+            update_status_kursi(id_jadwal, kursi['no_kursi'], 'terisi')  # PERBAIKAN DI SINI
 
         simpan_riwayat_transaksi(
             username, 
@@ -1416,13 +1402,15 @@ def proses_pembelian(username, film_terpilih):
     
     input("Tekan Enter untuk kembali...")
 
+
 def proses_pembelian_dengan_jadwal(username, film_terpilih, jadwal_dipilih):
     clear_terminal()
     print(f"=== PEMBELIAN TIKET: {film_terpilih['Judul']} ===")
 
+    id_jadwal = jadwal_dipilih['id_jadwal']
     id_studio = jadwal_dipilih['id_studio']
 
-    kursi_terpilih = pilih_kursi(id_studio)
+    kursi_terpilih = pilih_kursi(id_jadwal)  # PERBAIKAN DI SINI
     if not kursi_terpilih:
         print("Pembelian dibatalkan.")
         input("Tekan Enter untuk kembali...")
@@ -1456,7 +1444,7 @@ def proses_pembelian_dengan_jadwal(username, film_terpilih, jadwal_dipilih):
     konfirmasi = input("\nKonfirmasi pembelian? (y/n): ").lower()
     if konfirmasi == 'y':
         for kursi in kursi_terpilih[:jumlah_tiket]:
-            update_status_kursi(id_studio, kursi['no_kursi'], 'terisi')
+            update_status_kursi(id_jadwal, kursi['no_kursi'], 'terisi')  # PERBAIKAN DI SINI
 
         simpan_riwayat_transaksi(
             username,
@@ -1471,7 +1459,6 @@ def proses_pembelian_dengan_jadwal(username, film_terpilih, jadwal_dipilih):
         print("Pembelian dibatalkan.")
 
     input("Tekan Enter untuk kembali...")
-
 
 def simpan_riwayat_transaksi(username, nama_film, jam_mulai, jam_selesai, jumlah_tiket, harga_tiket):
     total_harga = jumlah_tiket * harga_tiket
