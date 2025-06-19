@@ -276,11 +276,6 @@ def tambah_film():
         if not id_film:
             print("Kembali ke menu...")
             return
-
-        id_sudah_ada = any(row['id_film'] == id_film for row in rows)
-        if id_sudah_ada:
-            print("ID Film sudah digunakan. Silakan masukkan ID lain.")
-            continue
         break
 
     while True:
