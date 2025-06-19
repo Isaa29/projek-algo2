@@ -1515,7 +1515,7 @@ def beri_rating_film(username):
 
     print("\n=== DAFTAR FILM ===")
     for i, film in enumerate(film_list, 1):
-        print(f"{i}. {film.get('judul', 'Tidak ada judul')}")
+        print(f"{i}. {film.get('Judul', 'Tidak ada judul')}")
 
     try:
         pilihan = int(input("\nPilih nomor film yang ingin diberi rating: ")) - 1
