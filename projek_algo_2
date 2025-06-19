@@ -44,12 +44,12 @@ def clear_terminal():
 
 def header():
     print("""
- _____        ______               
-|_   ()    |___  /               
-  | |  _ __  __ / /  ___  _ __   ___ 
-  | | | |\ \/ // /  / _ \| '_ \ / _ \\
-  | | | | >  </ /| (_) | | | |  __/
-  \/ ||//\\/\/|| ||\|
+ _____ _       ______               
+|_   _(_)     |___  /               
+  | |  _ __  __  / / ___  _ __   ___ 
+  | | | |\ \/ / / / / _ \| '_ \ / _ \\
+  | | | | >  < / / | (_) | | | |  __/
+  \_/ |_|/_/\_/_____\___/|_| |_|\___|
                                      
                                      
 """)
@@ -266,7 +266,10 @@ def tambah_film():
     print(f"{'ID':<10} {'Judul':<30} {'Genre':<15} {'Durasi':<10} {'Harga':<10}")
     print('-'*75)
     for row in rows:
+        rating_display = row.get('Rating', '') or '-'
         print(f"{row['id_film']:<10} {row['Judul']:<30} {row['Genre']:<15} {row['Durasi (menit)']:<10} Rp{row['Harga']:<10}")
+
+    print('\nTekan Enter tanpa mengetik apa pun untuk kembali ke menu.')
 
     while True:
         id_film = input('ID Film: ').strip()
@@ -1141,7 +1144,6 @@ def beli_tiket(username):
             return 
         else:
             print("Pilihan tidak valid. Silakan coba lagi.")
-            input("Tekan Enter untuk melanjutkan...")
 
 def cari_dan_pilih_film():
     clear_terminal()
