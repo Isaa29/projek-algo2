@@ -1,6 +1,7 @@
 import csv
 import os
 from datetime import datetime, timedelta
+from collections import defaultdict
 
 file_film = "film.csv"
 file_jadwal = "jadwal.csv"
@@ -769,14 +770,40 @@ def rekomendasi_jadwal_tayang():
         print("Input tidak valid.")
         return
 
-    if not os.path.exists(file_film):
-        print("Data film tidak ditemukan.")
+    if not os.path.exists(file_film) or not os.path.exists(file_rating):
+        print("Data film atau rating tidak ditemukan.")
         return
 
+    rating_total = defaultdict(float)
+    rating_count = defaultdict(int)
+
+    with open(file_rating, 'r') as f_rating:
+        reader = csv.DictReader(f_rating)
+        for row in reader:
+            try:
+                id_film = row['id_film']
+                rating = float(row['rating'])
+                rating_total[id_film] += rating
+                rating_count[id_film] += 1
+            except:
+                continue
+
+    rating_dict = {}
+    for id_film in rating_total:
+        rating_dict[id_film] = rating_total[id_film] / rating_count[id_film]
+
+    # === BACA DATA FILM DAN GABUNGKAN RATING ===
     with open(file_film, 'r') as file:
         reader = csv.DictReader(file)
-        film_list = [row for row in reader if row.get("Rating") and row.get("Durasi (menit)")]
+        film_list = []
+        for row in reader:
+            id_film = row.get('id_film')
+            durasi = row.get('Durasi (menit)')
+            if id_film and durasi and id_film in rating_dict:
+                row['Rating'] = rating_dict[id_film]
+                film_list.append(row)
 
+    # === FILTER FILM YANG SESUAI DURASI ===
     durasi = []
     nilai = []
     data_film = []
@@ -797,6 +824,7 @@ def rekomendasi_jadwal_tayang():
         print("Tidak ada film yang durasinya sesuai dengan waktu yang tersedia.")
         return
 
+    # === UNBOUNDED KNAPSACK ===
     n = len(durasi)
     dp = [0] * (kapasitas + 1)
     pilihan = [-1] * (kapasitas + 1)
@@ -822,6 +850,7 @@ def rekomendasi_jadwal_tayang():
         print("Tidak ada kombinasi film yang cocok dengan durasi tersebut.")
         return
 
+    # === TAMPILKAN HASIL ===
     print("\nRekomendasi Film:")
     total_durasi = 0
     total_rating = 0
